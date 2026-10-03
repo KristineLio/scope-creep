@@ -141,6 +141,7 @@ const PROTECTED_TOASTS = new Set([
   "REQUEST DENIED",
   "GREAT FEEDBACK",
   "SHIP REQUEST CONVERTED",
+  "SHIP REQUEST DENIED",
   "FEEDBACK RECEIVED",
   "ROADMAP UPDATED",
 ]);
@@ -229,8 +230,21 @@ export function pickConfidenceFeature(s: GameState): string {
 }
 
 export function beginShip(s: GameState): GameState {
-  if (s.features.length <= 3 && s.decisions <= 2 && !s.features.includes("analytics") && !s.agenticDone) {
-    return { ...s, ending: "sensible", screen: "end" };
+  if (!s.features.includes("accounts") && !s.agenticDone && !s.features.includes("analytics")) {
+    let n = addUserChoice({
+      ...s,
+      toast: {
+        title: "SHIP REQUEST DENIED",
+        sub: "Accounts were added for your protection.",
+      },
+    }, "accounts");
+    return {
+      ...n,
+      toast: {
+        title: "SHIP REQUEST DENIED",
+        sub: "Accounts were added for your protection.",
+      },
+    };
   }
   if (s.agenticDone) {
     return {
@@ -336,8 +350,10 @@ ${s.features.length} features
 ${s.deps} dependencies
 ${euro(unrealizedValue(s.features.length))} portfolio value
 €0 revenue
+Launch status: PREVENTED
 Ship date: NEVER
 
+MISSION ACCOMPLISHED: SHIPPING PREVENTED.
 ${ideaPunchline(s.idea, s.features.length)}
 
 YOU WERE THE EXIT LIQUIDITY.`;

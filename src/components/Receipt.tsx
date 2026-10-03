@@ -42,7 +42,7 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
       ["Downline", String(s.deps)],
       ["AI exposure", `${s.agents} agents`],
       ["Launch Confidence", formatConfidence(s.launchConfidence)],
-      ["Withdrawal", "FROZEN"],
+      ["Launch status", "PREVENTED"],
       ["Ship date", "NEVER"],
     ];
     ctx.font = "28px sans-serif";
@@ -56,12 +56,13 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     ctx.font = "bold 64px serif";
     ctx.font = "bold 36px serif";
     ctx.font = "24px serif";
+    ctx.fillText("MISSION ACCOMPLISHED: SHIPPING PREVENTED.", 64, 990);
     wrap(ctx, ideaPunchline(s.idea, s.features.length), 64, 1040, 950, 32);
     ctx.font = "bold 36px serif";
     ctx.fillText("YOU WERE THE EXIT LIQUIDITY.", 64, 1120);
     ctx.font = "22px sans-serif";
     ctx.fillStyle = "#6b665c";
-    ctx.fillText("rug pull complete", 64, 1180);
+    ctx.fillText("scope creep complete", 64, 1180);
     const a = document.createElement("a");
     a.download = "scope-creep-exit.png";
     a.href = canvas.toDataURL("image/png");
@@ -106,13 +107,14 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
           <div>Downline dependencies</div><div>{s.deps}</div>
           <div>Paying users</div><div>0</div>
           <div>Launch Confidence</div><div>99.93%</div>
-          <div>Withdrawal status</div><div>FROZEN</div>
+          <div>Launch status</div><div>PREVENTED</div>
           <div>Ship date</div><div>NEVER</div>
         </div>
+        <p className="receipt-punchline">MISSION ACCOMPLISHED: SHIPPING PREVENTED.</p>
         <p className="receipt-punchline">{ideaPunchline(s.idea, s.features.length)}</p>
         <p style={{ marginTop: 12 }}>Congratulations.</p>
         <h1>YOU WERE THE EXIT LIQUIDITY.</h1>
-        <p className="whisper">rug pull complete ✓</p>
+        <p className="whisper">scope creep complete ✓</p>
         <div className="row-btns" style={{ marginTop: 16 }}>
           <button className="primary" onClick={onRestart}>Try another innocent idea</button>
           <button className="ghost" onClick={copy}>{copied ? "✓ Failure copied" : "Copy my failure"}</button>

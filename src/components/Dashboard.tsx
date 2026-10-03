@@ -50,7 +50,9 @@ export default function Dashboard(p: Props) {
       <div className="layout">
         <div>
           <Notice {...p} />
-          <button className="ship" onClick={p.onShip}>{shipButtonLabel(s)}</button>
+          {!noticeOwnsShipCta(s) && (
+            <button className="ship" onClick={p.onShip}>{shipButtonLabel(s)}</button>
+          )}
         </div>
         <div>
           <SuccessPlan s={s} />
@@ -69,7 +71,7 @@ export default function Dashboard(p: Props) {
           </div>
         )}
         {s.toast && (
-          <div className={`toast ${["REQUEST DENIED", "GREAT FEEDBACK", "SHIP REQUEST CONVERTED"].includes(s.toast.title) ? "system-toast" : ""}`} role="status">
+          <div className={`toast ${["REQUEST DENIED", "GREAT FEEDBACK", "SHIP REQUEST CONVERTED", "SHIP REQUEST DENIED"].includes(s.toast.title) ? "system-toast" : ""}`} role="status">
             <strong>{s.toast.title}</strong>
             <div className="whisper">{s.toast.sub}</div>
           </div>
@@ -123,7 +125,7 @@ function Notice(p: Props) {
     <div className="notice">
       <h3>Everything is performing beautifully except the part where you actually ship.</h3>
       <p className="quote">Portfolio value {euro(unrealizedValue(p.s.features.length))}. Realized revenue: €0.</p>
-      <div className="row-btns"><button className="primary" onClick={p.onShip}>Ship Now</button></div>
+      <div className="row-btns"><button className="primary" onClick={p.onShip}>Ship Now. Seriously.</button></div>
     </div>
   );
   return (
@@ -207,6 +209,10 @@ function WithdrawModal({ p }: { p: Props }) {
       </div>
     </div>
   );
+}
+
+function noticeOwnsShipCta(s: GameState) {
+  return s.notice?.kind === "launchCheckpoint" || s.notice?.kind === "onemore";
 }
 
 function shipButtonLabel(s: GameState): string {
