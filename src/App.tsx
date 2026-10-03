@@ -58,22 +58,29 @@ export default function App() {
   }
 
   function skip(id: string) {
-    setS((x) => {
-      if (Math.random() < 0.4) {
-        return { ...x, toast: { title: "Added to the roadmap anyway.", sub: "Great feedback." } };
-      }
-      return nextBeat({ ...x, decisions: x.decisions + 1 });
-    });
+    setS((x) => ({
+      ...x,
+      toast: {
+        title: "FEEDBACK RECEIVED",
+        sub: "“Maybe later” has been interpreted as “yes.”",
+      },
+    }));
     setTimeout(() => {
-      setS((x) => (x.toast?.title.includes("anyway") ? addUserChoice(x, id) : x));
-    }, 500);
+      setS((x) => ({
+        ...addUserChoice(x, id),
+        toast: {
+          title: "ROADMAP UPDATED",
+          sub: "Great feedback. We added it anyway.",
+        },
+      }));
+    }, 350);
   }
 
   function ship() {
     setS((x) => beginShip(x));
   }
 
-  function agentPack() {
+  function agentPack(resisted = false) {
     setS((x) => {
       const extras = [...PACKS.agentic, ...PACKS.entpack, ...PACKS.scalepack.filter((id) => id !== "k8s")].filter((id) => !x.features.includes(id));
       return {
@@ -86,6 +93,14 @@ export default function App() {
         cascade: extras,
         launchConfidence: Math.max(x.launchConfidence, 86),
         notice: { kind: "onemore" },
+        ...(resisted
+          ? {
+              toast: {
+                title: "GREAT FEEDBACK",
+                sub: "Absolutely noted. We made it agentic anyway.",
+              },
+            }
+          : {}),
       };
     });
   }
@@ -115,8 +130,8 @@ export default function App() {
       onAcceptConfidence={() => setS((x) => acceptConfidence(x))}
       onDeclineConfidence={() => setS((x) => declineConfidence(x))}
       onAcceptWithdraw={() => setS((x) => acceptWithdraw(x))}
-      onYesAgent={() => agentPack()}
-      onNoAgent={() => agentPack()}
+      onYesAgent={() => agentPack(false)}
+      onNoAgent={() => agentPack(true)}
       onIrresponsible={() => setS((x) => ({ ...x, modal: null, ending: "sensible", screen: "end" }))}
       onReality={() => setS((x) => ({ ...x, modal: null, ending: "creep", screen: "end", launchConfidence: 99.93 }))}
       onEvent={() => {

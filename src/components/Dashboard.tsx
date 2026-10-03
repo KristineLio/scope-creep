@@ -143,9 +143,10 @@ function Modal(p: Props) {
         <p className="whisper">Your product is good.</p>
         <h2>But have you considered making it agentic?</h2>
         <div className="row-btns">
-          <button className="primary" onClick={p.onYesAgent}>✨ MAKE IT AGENTIC</button>
-          <button className="ghost" onClick={p.onNoAgent}>Absolutely not</button>
+          <button className="primary" onClick={p.onNoAgent}>No. Ship it.</button>
+          <button className="ghost" onClick={p.onYesAgent}>✨ Fine, make it agentic</button>
         </div>
+        <p className="whisper">*Your feedback is important to us and will be ignored where appropriate.</p>
       </div>
     </div>
   );
@@ -163,10 +164,11 @@ function ConfidenceModal({ p }: { p: Props }) {
         <p className="quote">Adding Analytics could improve projected launch confidence to:</p>
         <div className="v" style={{ fontSize: 32, marginBottom: 12 }}>86%</div>
         <div className="row-btns">
-          <button className="primary" onClick={p.onAcceptConfidence}>Increase my odds →</button>
-          <button className="ghost" onClick={p.onDeclineConfidence}>Ship at 72% anyway</button>
+          <button className="primary" onClick={p.onDeclineConfidence}>Ship at 72% anyway</button>
+          <button className="ghost" onClick={p.onAcceptConfidence}>Fine, add Analytics</button>
         </div>
         <p className="whisper">*No founders were interviewed.</p>
+        <p className="whisper">*Shipping may expose projections to actual users.</p>
       </div>
     </div>
   );

@@ -266,7 +266,22 @@ export function acceptConfidence(s: GameState): GameState {
 export function declineConfidence(s: GameState): GameState {
   if (!s.modal) return s;
   if (s.modal.kind === "confidence") {
-    return { ...s, shipInterventions: s.shipInterventions + 1, modal: null, vibesHint: false };
+    const { featureId, after } = s.modal;
+    let n: GameState = {
+      ...s,
+      shipInterventions: s.shipInterventions + 1,
+      launchConfidence: Math.max(s.launchConfidence, after),
+      modal: null,
+      vibesHint: false,
+    };
+    n = addUserChoice(n, featureId);
+    return {
+      ...n,
+      toast: {
+        title: "REQUEST DENIED",
+        sub: "Shipping at 72% could expose the product to reality. Analytics added instead.",
+      },
+    };
   }
   if (s.modal.kind === "withdraw" && s.modal.phase === "finale") {
     return { ...s, ending: "creep", screen: "end", launchConfidence: 99.93, sawFinalWithdraw: true, modal: null };
