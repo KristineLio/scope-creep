@@ -162,7 +162,7 @@ export function applyFeature(s: GameState, id: string, countDecision: boolean): 
     dashboards: s.dashboards + (f.dashboard ? 1 : 0),
     stakeholders: Math.min(100, s.stakeholders + (s.features.length + 1 > 5 ? 8 : 4)),
     decisions: s.decisions + (countDecision ? 1 : 0),
-    modal: null,
+    modal: countDecision ? null : s.modal,
   };
   if (n.features.filter((x) => x !== "core").length === 1) n = unlock(n, "worse");
   if (id === "analytics" || id === "prod") n = unlock(n, "ddd");
@@ -230,6 +230,14 @@ export function beginShip(s: GameState): GameState {
       confidenceUnlocked: true,
       launchConfidence: Math.max(s.launchConfidence, 86),
       modal: { kind: "withdraw", phase: "k8s" },
+    };
+  }
+  if (s.features.includes("analytics") && !s.agenticDone) {
+    return {
+      ...s,
+      confidenceUnlocked: true,
+      launchConfidence: Math.max(s.launchConfidence, 86),
+      modal: { kind: "agentic" },
     };
   }
   return {

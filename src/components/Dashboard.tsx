@@ -94,7 +94,7 @@ function Notice(p: Props) {
       <p className="quote">Users will probably expect accounts.</p>
       <div className="row-btns">
         <button className="primary" onClick={() => p.onAdd("accounts")}>+ Add accounts</button>
-        <button className="ghost" onClick={() => p.onSkip("accounts")}>Ship without it</button>
+        <button className="ghost" onClick={p.onShip}>Ship without it</button>
       </div>
     </div>
   );
