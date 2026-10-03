@@ -85,6 +85,17 @@ export const HIDDEN = new Set([
   "chain", "vibe",
 ]);
 
+export function primaryCreepId(idea: string): string {
+  const i = idea.toLowerCase();
+  if (i.includes("weather")) return "forecastai";
+  if (i.includes("todo") || i.includes("task")) return "prod";
+  if (i.includes("landing") || i.includes("page")) return "ab";
+  if (i.includes("calc")) return "explain";
+  if (i.includes("habit")) return "social";
+  if (i.includes("timer") || i.includes("time")) return "notif";
+  return "analytics";
+}
+
 export function personalizedIds(idea: string): string[] {
   const i = idea.toLowerCase();
   if (i.includes("weather")) return ["location", "alerts", "forecastai"];

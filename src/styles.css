@@ -37,7 +37,12 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
 .card label { display: block; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
 .card .v { font-size: 22px; font-weight: 600; }
-.status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; margin: 8px 0 18px; }
+.status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; margin: 8px 0 12px; }
+.scope-mutation { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.scope-mutation span { display: block; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.scope-mutation strong { display: block; font-size: 15px; margin-top: 2px; }
+.mutation-arrow { color: var(--muted); font-size: 18px; }
+.mutation-now.pop strong { animation: rebrand-pop .65s ease both; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
 .dot.warn { background: var(--warn); }
 .dot.bad { background: var(--bad); }

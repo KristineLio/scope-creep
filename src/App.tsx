@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FEATURES, PACKS } from "./data/features";
+import { FEATURES, PACKS, personalizedIds } from "./data/features";
 import {
   acceptConfidence,
   acceptWithdraw,
@@ -86,7 +86,13 @@ export default function App() {
     setScopeBurst(true);
     setTimeout(() => setScopeBurst(false), 1600);
     setS((x) => {
-      const extras = [...PACKS.agentic, ...PACKS.entpack, ...PACKS.scalepack.filter((id) => id !== "k8s")].filter((id) => !x.features.includes(id));
+      const personalized = personalizedIds(x.idea).filter((id) => !x.features.includes(id));
+      const extras = [
+        ...personalized,
+        ...PACKS.agentic,
+        ...PACKS.entpack,
+        ...PACKS.scalepack.filter((id) => id !== "k8s"),
+      ].filter((id, index, arr) => !x.features.includes(id) && arr.indexOf(id) === index);
       return {
         ...x,
         agenticDone: true,

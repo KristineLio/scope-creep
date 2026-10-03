@@ -39,6 +39,17 @@ export default function Dashboard(p: Props) {
       <div className="status">
         <span className={`dot ${p.st.c}`} /> {p.st.t}
       </div>
+      <div className="scope-mutation">
+        <div>
+          <span>YOU STARTED WITH</span>
+          <strong>{s.idea}</strong>
+        </div>
+        <div className="mutation-arrow">→</div>
+        <div className={p.scopeBurst ? "mutation-now pop" : "mutation-now"}>
+          <span>SCOPE CREEP NOW CALLS IT</span>
+          <strong>{p.productName}</strong>
+        </div>
+      </div>
       <div className="metrics">
         <Metric label="Features" value={s.features.length} />
         <Metric label="Dependencies" value={s.deps} />
@@ -123,7 +134,7 @@ function Notice(p: Props) {
   }
   if (n.kind === "onemore") return (
     <div className="notice">
-      <h3>Everything is performing beautifully except the part where you actually ship.</h3>
+      <h3>Your {p.s.idea} now has {p.s.features.length} features, {p.s.agents} agents, and 0 paying users.</h3>
       <p className="quote">Portfolio value {euro(unrealizedValue(p.s.features.length))}. Realized revenue: €0.</p>
       <div className="row-btns"><button className="primary" onClick={p.onShip}>Ship Now. Seriously.</button></div>
     </div>
@@ -144,7 +155,7 @@ function Modal(p: Props) {
   if (m?.kind === "agentic") return (
     <div className="overlay">
       <div className="modal-card">
-        <p className="whisper">Your product is good.</p>
+        <p className="whisper">Your {p.s.idea} now has {p.s.features.length} features and 0 users.</p>
         <h2>But have you considered making it agentic?</h2>
         <div className="row-btns">
           <button className="primary" onClick={p.onYesAgent}>✨ Fine, make it agentic</button>
@@ -160,15 +171,17 @@ function Modal(p: Props) {
 function ConfidenceModal({ p }: { p: Props }) {
   const m = p.s.modal;
   if (!m || m.kind !== "confidence") return null;
+  const feature = FEATURES.find((f) => f.id === m.featureId);
+  const title = feature?.title ?? "Analytics";
   return (
     <div className="overlay">
       <div className="modal-card">
         <p className="whisper">Your launch is almost ready.</p>
         <h2>Launch Confidence 72%</h2>
-        <p className="quote">Adding Analytics could improve projected launch confidence to:</p>
+        <p className="quote">Adding {title} could improve projected launch confidence to:</p>
         <div className="v" style={{ fontSize: 32, marginBottom: 12 }}>86%</div>
         <div className="row-btns">
-          <button className="primary" onClick={p.onAcceptConfidence}>Fine, add Analytics</button>
+          <button className="primary" onClick={p.onAcceptConfidence}>Fine, add {title}</button>
           <button className="ghost" onClick={p.onDeclineConfidence}>Ship at 72% anyway</button>
         </div>
         <p className="whisper">*No founders were interviewed.</p>
@@ -186,7 +199,7 @@ function WithdrawModal({ p }: { p: Props }) {
       <div className="overlay">
         <div className="modal-card">
           <h2>Launch Confidence 99.93%</h2>
-          <p className="quote">Everything is performing beautifully except the part where you actually ship.</p>
+          <p className="quote">Production infrastructure ready. Production remains theoretical.</p>
           <div className="row-btns">
             <button className="primary" onClick={p.onDeclineConfidence}>Ship Now</button>
           </div>

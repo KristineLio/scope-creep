@@ -1,4 +1,4 @@
-import { FEATURES, HIDDEN, PACKS, type Feature } from "../data/features";
+import { FEATURES, HIDDEN, PACKS, primaryCreepId, type Feature } from "../data/features";
 import { EVENTS, type GameEvent } from "../data/events";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { ideaPunchline, mutateName, nameStage } from "./projectNaming";
@@ -191,7 +191,7 @@ export function nextBeat(s: GameState): GameState {
   if (!s.sawMvpCheck && s.features.filter((id) => id !== "core").length >= 1 && !s.agenticDone) {
     return { ...s, sawMvpCheck: true, notice: { kind: "launchCheckpoint", stage: "mvp" } };
   }
-  if (s.features.includes("analytics") && !s.agenticDone) {
+  if ((s.features.includes("analytics") || s.features.includes(primaryCreepId(s.idea))) && !s.agenticDone) {
     return { ...s, modal: { kind: "agentic" }, notice: null };
   }
   if (s.agenticDone) {
@@ -254,7 +254,7 @@ export function beginShip(s: GameState): GameState {
       modal: { kind: "withdraw", phase: "k8s" },
     };
   }
-  if (s.features.includes("analytics") && !s.agenticDone) {
+  if ((s.features.includes("analytics") || s.features.includes(primaryCreepId(s.idea))) && !s.agenticDone) {
     return {
       ...s,
       confidenceUnlocked: true,
@@ -267,7 +267,7 @@ export function beginShip(s: GameState): GameState {
     confidenceUnlocked: true,
     vibesHint: true,
     launchConfidence: 72,
-    modal: { kind: "confidence", featureId: "analytics", before: 72, after: 86, step: 0 },
+    modal: { kind: "confidence", featureId: primaryCreepId(s.idea), before: 72, after: 86, step: 0 },
   };
 }
 
@@ -282,7 +282,11 @@ export function acceptConfidence(s: GameState): GameState {
     vibesHint: false,
   };
   n = addUserChoice(n, featureId);
-  return n;
+  return {
+    ...n,
+    modal: { kind: "agentic" },
+    notice: null,
+  };
 }
 
 export function declineConfidence(s: GameState): GameState {
@@ -297,11 +301,14 @@ export function declineConfidence(s: GameState): GameState {
       vibesHint: false,
     };
     n = addUserChoice(n, featureId);
+    const title = FEATURES.find((f) => f.id === featureId)?.title ?? "Analytics";
     return {
       ...n,
+      modal: { kind: "agentic" },
+      notice: null,
       toast: {
         title: "REQUEST DENIED",
-        sub: "Shipping at 72% could expose the product to reality. Analytics added instead.",
+        sub: `Shipping at 72% could expose the product to reality. ${title} added instead.`,
       },
     };
   }
