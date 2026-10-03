@@ -201,7 +201,7 @@ export function nextBeat(s: GameState): GameState {
 export function addUserChoice(s: GameState, id: string): GameState {
   let n = applyFeature(s, id, true);
   const extras = PACKS[id] ?? [];
-  n = { ...n, cascade: extras, recruitToast: extras.length ? `${FEATURES.find(f=>f.id===id)?.title ?? "Feature"} recruited ${extras.length} new features.` : null };
+  n = { ...n, cascade: extras, recruitToast: extras.length ? `${FEATURES.find(f=>f.id===id)?.title ?? "Feature"} recruited ${extras.length} new features. You’re one step closer to a perfectly monetizable product.` : null };
   if (id === "entpack") n = { ...n, enterpriseDone: true };
   if (id === "scalepack") n = { ...n, scaleDone: true };
   return nextBeat(n);

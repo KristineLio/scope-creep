@@ -2,6 +2,7 @@ import { FEATURES } from "../data/features";
 import { euro, formatConfidence, unrealizedValue, type GameState } from "../lib/gameEngine";
 import ArchMap from "./ArchMap";
 import Metric from "./Metric";
+import SuccessPlan from "./SuccessPlan";
 
 type Props = {
   s: GameState;
@@ -50,16 +51,7 @@ export default function Dashboard(p: Props) {
           <button className="ship" onClick={p.onShip}>Ship Now</button>
         </div>
         <div>
-          <div className="card">
-            <label>Roadmap</label>
-            <ul className="feat-list">
-              {s.features.map((id) => (
-                <li key={id} className={s.cascade.includes(id) || id === s.features[s.features.length - 1] ? "pop" : ""}>
-                  {id === "core" ? s.idea : FEATURES.find((f) => f.id === id)?.title}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <SuccessPlan s={s} />
           <div className="card" style={{ marginTop: 10 }}>
             <ArchMap count={s.features.length} deps={s.deps} />
           </div>
@@ -70,7 +62,7 @@ export default function Dashboard(p: Props) {
       <div className="toast-stack">
         {s.recruitToast && (
           <div className="toast" role="status">
-            <strong>Congratulations!</strong>
+            <strong>Great work!</strong>
             <div className="whisper">{s.recruitToast}</div>
           </div>
         )}
