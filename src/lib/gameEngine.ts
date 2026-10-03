@@ -140,7 +140,7 @@ const PRIMARY_TOASTS = new Set(["worse", "downline", "numup"]);
 const PROTECTED_TOASTS = new Set([
   "REQUEST DENIED",
   "GREAT FEEDBACK",
-  "WITHDRAWAL CONVERTED",
+  "SHIP REQUEST CONVERTED",
   "FEEDBACK RECEIVED",
   "ROADMAP UPDATED",
 ]);
@@ -302,8 +302,8 @@ export function resistWithdraw(s: GameState): GameState {
   return {
     ...acceptWithdraw(s),
     toast: {
-      title: "WITHDRAWAL CONVERTED",
-      sub: "Your withdrawal request was automatically converted into 1 Kubernetes cluster.",
+      title: "SHIP REQUEST CONVERTED",
+      sub: "Your ship request was automatically converted into 1 Kubernetes cluster.",
     },
   };
 }
