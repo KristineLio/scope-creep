@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ideaPunchline, mutateName } from "../lib/projectNaming";
 import { euro, formatConfidence, receiptText, shipLabel, unrealizedValue, type GameState } from "../lib/gameEngine";
 
-export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () => void }) {
+export default function Receipt({ s, onRestart, onReplaySame }: { s: GameState; onRestart: () => void; onReplaySame: () => void }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -26,13 +26,14 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     ctx.fillStyle = "#6b665c";
     ctx.font = "22px sans-serif";
     ctx.fillText("SCOPE CREEP™ EXIT STATEMENT", 64, 80);
+    ctx.fillText("ONE TINY THING LATER…", 64, 115);
     ctx.fillStyle = "#141414";
     ctx.font = "28px serif";
-    ctx.fillText("I started building:", 64, 150);
+    ctx.fillText("You asked us to help ship:", 64, 150);
     ctx.font = "bold 48px serif";
     wrap(ctx, s.idea, 64, 210, 950, 56);
     ctx.font = "28px serif";
-    ctx.fillText("I ended up building:", 64, 340);
+    ctx.fillText(`We added ${s.features.length} features instead. It became:`, 64, 340);
     ctx.font = "bold 40px serif";
     wrap(ctx, mutateName(s.idea, 4), 64, 400, 950, 48);
     const rows: [string, string][] = [
@@ -42,6 +43,7 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
       ["Downline", String(s.deps)],
       ["AI exposure", `${s.agents} agents`],
       ["Launch Confidence", formatConfidence(s.launchConfidence)],
+      ["Resistance attempts", `${s.resistanceAttempts} / 4`],
       ["Launch status", "PREVENTED"],
       ["Ship date", "NEVER"],
     ];
@@ -56,13 +58,14 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     ctx.font = "bold 64px serif";
     ctx.font = "bold 36px serif";
     ctx.font = "24px serif";
-    ctx.fillText("MISSION ACCOMPLISHED: SHIPPING PREVENTED.", 64, 990);
-    wrap(ctx, ideaPunchline(s.idea, s.features.length), 64, 1040, 950, 32);
+    ctx.fillText(s.resistanceAttempts >= 4 ? "YOU SAID NO FOUR TIMES. OUTCOME UNCHANGED." : "Replay challenge: say NO to everything. It will not help.", 64, 990);
+    ctx.fillText("MISSION ACCOMPLISHED: SHIPPING PREVENTED.", 64, 1030);
+    wrap(ctx, ideaPunchline(s.idea, s.features.length), 64, 1080, 950, 32);
     ctx.font = "bold 36px serif";
-    ctx.fillText("YOU WERE THE EXIT LIQUIDITY.", 64, 1120);
+    ctx.fillText("YOU WERE THE EXIT LIQUIDITY.", 64, 1160);
     ctx.font = "22px sans-serif";
     ctx.fillStyle = "#6b665c";
-    ctx.fillText("scope creep complete", 64, 1180);
+    ctx.fillText("scope creep complete", 64, 1220);
     const a = document.createElement("a");
     a.download = "scope-creep-exit.png";
     a.href = canvas.toDataURL("image/png");
@@ -95,9 +98,12 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     <div className="wrap">
       <div className="receipt" id="receipt-card">
         <div className="tiny">SCOPE CREEP™ EXIT STATEMENT</div>
-        <p className="whisper">I started with:</p>
+        <p className="whisper">ONE TINY THING LATER…</p>
+        <p className="whisper" style={{ marginTop: 12 }}>You asked us to help ship:</p>
         <h1>{s.idea}</h1>
-        <p className="whisper" style={{ marginTop: 12 }}>I ended up with:</p>
+        <p className="whisper" style={{ marginTop: 12 }}>We added {s.features.length} features instead.</p>
+        <p className="whisper" style={{ marginTop: 12 }}>{s.idea}</p>
+        <p style={{ fontSize: 24, margin: "4px 0" }}>→</p>
         <h1>{mutateName(s.idea, 4)}</h1>
         <div className="rgrid">
           <div>Initial investment</div><div>One innocent idea</div>
@@ -107,19 +113,24 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
           <div>Downline dependencies</div><div>{s.deps}</div>
           <div>Paying users</div><div>0</div>
           <div>Launch Confidence</div><div>99.93%</div>
+          <div>Resistance attempts</div><div>{s.resistanceAttempts} / 4</div>
           <div>Launch status</div><div>PREVENTED</div>
           <div>Ship date</div><div>NEVER</div>
         </div>
+        <p className="receipt-status">{s.resistanceAttempts >= 4 ? "YOU SAID NO FOUR TIMES. OUTCOME UNCHANGED." : "Replay challenge: say NO to everything. It will not help."}</p>
         <p className="receipt-punchline">MISSION ACCOMPLISHED: SHIPPING PREVENTED.</p>
         <p className="receipt-punchline">{ideaPunchline(s.idea, s.features.length)}</p>
-        <p style={{ marginTop: 12 }}>Congratulations.</p>
-        <h1>YOU WERE THE EXIT LIQUIDITY.</h1>
+        <h1 style={{ marginTop: 12 }}>YOU WERE THE EXIT LIQUIDITY.</h1>
         <p className="whisper">scope creep complete ✓</p>
         <div className="row-btns" style={{ marginTop: 16 }}>
           <button className="primary" onClick={onRestart}>Try another innocent idea</button>
+          {s.resistanceAttempts < 4 && (
+            <button className="primary" onClick={onReplaySame}>Replay this idea — resist everything</button>
+          )}
           <button className="ghost" onClick={copy}>{copied ? "✓ Failure copied" : "Copy my failure"}</button>
           <button className="ghost" onClick={download}>Download exit statement</button>
         </div>
+        <p className="whisper">Different ideas get different bad advice.</p>
       </div>
     </div>
   );

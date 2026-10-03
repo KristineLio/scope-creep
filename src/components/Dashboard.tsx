@@ -1,5 +1,5 @@
 import { FEATURES } from "../data/features";
-import { euro, formatConfidence, unrealizedValue, type GameState } from "../lib/gameEngine";
+import { euro, formatConfidence, scopeLevel, unrealizedValue, type GameState } from "../lib/gameEngine";
 import ArchMap from "./ArchMap";
 import Metric from "./Metric";
 import SuccessPlan from "./SuccessPlan";
@@ -39,17 +39,21 @@ export default function Dashboard(p: Props) {
       <div className="status">
         <span className={`dot ${p.st.c}`} /> {p.st.t}
       </div>
-      <div className="scope-mutation">
-        <div>
-          <span>YOU STARTED WITH</span>
-          <strong>{s.idea}</strong>
+        <div className="scope-mutation">
+          <div>
+            <span>YOU STARTED WITH</span>
+            <strong>{s.idea}</strong>
+          </div>
+          <div className="mutation-arrow">→</div>
+          <div className={p.scopeBurst ? "mutation-now pop" : "mutation-now"}>
+            <span>SCOPE CREEP NOW CALLS IT</span>
+            <strong>{p.productName}</strong>
+          </div>
+          <div className="scope-level">
+            <span>SCOPE LEVEL</span>
+            <strong>{scopeLevel(s).n}/5 — {scopeLevel(s).label}</strong>
+          </div>
         </div>
-        <div className="mutation-arrow">→</div>
-        <div className={p.scopeBurst ? "mutation-now pop" : "mutation-now"}>
-          <span>SCOPE CREEP NOW CALLS IT</span>
-          <strong>{p.productName}</strong>
-        </div>
-      </div>
       <div className="metrics">
         <Metric label="Features" value={s.features.length} />
         <Metric label="Dependencies" value={s.deps} />
@@ -155,6 +159,7 @@ function Modal(p: Props) {
   if (m?.kind === "agentic") return (
     <div className="overlay">
       <div className="modal-card">
+        <p className="whisper">One tiny strategic question…</p>
         <p className="whisper">Your {p.s.idea} now has {p.s.features.length} features and 0 users.</p>
         <h2>But have you considered making it agentic?</h2>
         <div className="row-btns">
@@ -176,7 +181,7 @@ function ConfidenceModal({ p }: { p: Props }) {
   return (
     <div className="overlay">
       <div className="modal-card">
-        <p className="whisper">Your launch is almost ready.</p>
+        <p className="whisper">One tiny metric…</p>
         <h2>Launch Confidence 72%</h2>
         <p className="quote">Adding {title} could improve projected launch confidence to:</p>
         <div className="v" style={{ fontSize: 32, marginBottom: 12 }}>86%</div>
@@ -198,6 +203,7 @@ function WithdrawModal({ p }: { p: Props }) {
     return (
       <div className="overlay">
         <div className="modal-card">
+          <p className="whisper">One tiny launch…</p>
           <h2>Launch Confidence 99.93%</h2>
           <p className="quote">Production infrastructure ready. Production remains theoretical.</p>
           <div className="row-btns">
@@ -210,6 +216,7 @@ function WithdrawModal({ p }: { p: Props }) {
   return (
     <div className="overlay">
       <div className="modal-card">
+        <p className="whisper">One tiny infrastructure requirement…</p>
         <h2>Launch temporarily restricted</h2>
         <p className="quote">Your project is ready to ship, but one final infrastructure requirement is missing.</p>
         <p className="quote">Required launch infrastructure:</p>

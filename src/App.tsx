@@ -105,6 +105,7 @@ export default function App() {
         notice: { kind: "onemore" },
         ...(resisted
           ? {
+              resistanceAttempts: x.resistanceAttempts + 1,
               toast: {
                 title: "GREAT FEEDBACK",
                 sub: "Absolutely noted. We made it agentic anyway.",
@@ -117,7 +118,7 @@ export default function App() {
 
   if (s.screen === "landing") return <Landing idea={s.idea} onStart={start} />;
   if (s.screen === "end") {
-    return <Receipt s={s} onRestart={() => setS(initialState())} />;
+    return <Receipt s={s} onRestart={() => setS(initialState())} onReplaySame={() => start(s.idea)} />;
   }
 
   const st = statusFor(s);

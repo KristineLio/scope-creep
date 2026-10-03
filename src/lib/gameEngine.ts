@@ -53,6 +53,7 @@ export type GameState = {
   sawAgenticCheck: boolean;
   sawEnterpriseCheck: boolean;
   sawFinalWithdraw: boolean;
+  resistanceAttempts: number;
 };
 
 export const initialState = (): GameState => ({
@@ -85,6 +86,7 @@ export const initialState = (): GameState => ({
   sawAgenticCheck: false,
   sawEnterpriseCheck: false,
   sawFinalWithdraw: false,
+  resistanceAttempts: 0,
 });
 
 export function shipLabel(days: number): string {
@@ -94,6 +96,14 @@ export function shipLabel(days: number): string {
   if (days <= 20) return "Next quarter";
   if (days <= 40) return "FY27";
   return "NEVER";
+}
+
+export function scopeLevel(s: GameState): { n: number; label: string } {
+  if (s.features.length <= 1) return { n: 1, label: "INNOCENT" };
+  if (!s.confidenceUnlocked) return { n: 2, label: "MVP" };
+  if (!s.agenticDone) return { n: 3, label: "OPTIMIZED" };
+  if (!s.features.includes("k8s")) return { n: 4, label: "AGENTIC ENTERPRISE" };
+  return { n: 5, label: "UNSHIPPABLE" };
 }
 
 export function statusFor(s: GameState): { t: string; c: string } {
@@ -240,6 +250,7 @@ export function beginShip(s: GameState): GameState {
     }, "accounts");
     return {
       ...n,
+      resistanceAttempts: s.resistanceAttempts + 1,
       toast: {
         title: "SHIP REQUEST DENIED",
         sub: "Accounts were added for your protection.",
@@ -304,6 +315,7 @@ export function declineConfidence(s: GameState): GameState {
     const title = FEATURES.find((f) => f.id === featureId)?.title ?? "Analytics";
     return {
       ...n,
+      resistanceAttempts: s.resistanceAttempts + 1,
       modal: { kind: "agentic" },
       notice: null,
       toast: {
@@ -322,6 +334,7 @@ export function resistWithdraw(s: GameState): GameState {
   if (!s.modal || s.modal.kind !== "withdraw" || s.modal.phase !== "k8s") return s;
   return {
     ...acceptWithdraw(s),
+    resistanceAttempts: s.resistanceAttempts + 1,
     toast: {
       title: "SHIP REQUEST CONVERTED",
       sub: "Your ship request was automatically converted into 1 Kubernetes cluster.",
@@ -348,7 +361,11 @@ export function acceptWithdraw(s: GameState): GameState {
 }
 
 export function receiptText(s: GameState): string {
-  return `I tried to ship: ${s.idea}
+  const resist = `${s.resistanceAttempts}/4`;
+  return `ONE TINY THING LATER…
+
+You asked us to help ship: ${s.idea}
+We added ${s.features.length} features instead.
 
 Scope Creep turned it into:
 ${mutateName(s.idea, 4)}
@@ -357,8 +374,11 @@ ${s.features.length} features
 ${s.deps} dependencies
 ${euro(unrealizedValue(s.features.length))} portfolio value
 €0 revenue
+Resistance: ${resist}
 Launch status: PREVENTED
 Ship date: NEVER
+
+${s.resistanceAttempts >= 4 ? "YOU SAID NO FOUR TIMES. OUTCOME UNCHANGED." : "Replay challenge: say NO to everything. It will not help."}
 
 MISSION ACCOMPLISHED: SHIPPING PREVENTED.
 ${ideaPunchline(s.idea, s.features.length)}

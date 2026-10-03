@@ -82,6 +82,9 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 @keyframes rebrand-pop { 0% { transform: scale(1); } 35% { transform: scale(1.06); } 100% { transform: scale(1); } }
 @keyframes scope-nudge { 0% { transform: translateX(0); } 35% { transform: translateX(3px); } 70% { transform: translateX(-2px); } 100% { transform: translateX(0); } }
 .receipt-punchline { margin-top: 14px; padding: 10px 12px; border: 1px solid rgba(20,20,20,.12); border-radius: 10px; font-family: "Instrument Serif", serif; font-size: 20px; }
+.receipt-status { margin-top: 12px; font-size: 13px; letter-spacing: .04em; color: #6b665c; }
+.scope-level { margin-left: auto; text-align: right; }
+@media (max-width: 700px) { .scope-level { margin-left: 0; text-align: left; width: 100%; } }
 .conf-track { margin-top: 8px; height: 4px; background: #2a2e3a; border-radius: 99px; overflow: hidden; }
 .conf-fill { height: 100%; background: var(--accent); max-width: 99.93%; }
 .pyramid { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
