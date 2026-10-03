@@ -137,11 +137,19 @@ export function fomoLabel(s: GameState): string {
 }
 
 const PRIMARY_TOASTS = new Set(["worse", "downline", "numup"]);
+const PROTECTED_TOASTS = new Set([
+  "REQUEST DENIED",
+  "GREAT FEEDBACK",
+  "WITHDRAWAL CONVERTED",
+  "FEEDBACK RECEIVED",
+  "ROADMAP UPDATED",
+]);
 
 function unlock(s: GameState, id: keyof typeof ACHIEVEMENTS): GameState {
   if (s.achievements.includes(id)) return s;
   const a = ACHIEVEMENTS[id];
-  const toast = PRIMARY_TOASTS.has(id) ? { title: a.title, sub: a.sub } : s.toast;
+  const protectedToast = s.toast && PROTECTED_TOASTS.has(s.toast.title);
+  const toast = protectedToast ? s.toast : PRIMARY_TOASTS.has(id) ? { title: a.title, sub: a.sub } : s.toast;
   return { ...s, achievements: [...s.achievements, id], toast };
 }
 

@@ -62,14 +62,14 @@ export default function Dashboard(p: Props) {
       {s.modal && <Modal {...p} />}
 
       <div className="toast-stack">
-        {s.recruitToast && !s.toast && (
+        {s.recruitToast && !s.toast && !s.modal && (
           <div className="toast" role="status">
             <strong>Great work!</strong>
             <div className="whisper">{s.recruitToast}</div>
           </div>
         )}
         {s.toast && (
-          <div className="toast" role="status">
+          <div className={`toast ${["REQUEST DENIED", "GREAT FEEDBACK", "WITHDRAWAL CONVERTED"].includes(s.toast.title) ? "system-toast" : ""}`} role="status">
             <strong>{s.toast.title}</strong>
             <div className="whisper">{s.toast.sub}</div>
           </div>
@@ -200,8 +200,8 @@ function WithdrawModal({ p }: { p: Props }) {
         <p className="quote">Required shipping gas fee:</p>
         <div className="v" style={{ fontSize: 28, marginBottom: 12 }}>1 Kubernetes cluster</div>
         <div className="row-btns">
-          <button className="primary" onClick={p.onAcceptWithdraw}>Pay in infrastructure →</button>
-          <button className="ghost" onClick={p.onResistWithdraw}>Withdraw project anyway</button>
+          <button className="primary" onClick={p.onResistWithdraw}>Withdraw project anyway</button>
+          <button className="ghost" onClick={p.onAcceptWithdraw}>Fine, add Kubernetes</button>
         </div>
         <p className="whisper">No actual currency is involved. Only your remaining free time.</p>
       </div>
