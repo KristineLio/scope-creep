@@ -8,6 +8,7 @@ export type Feature = {
   cost: number;
   agent?: boolean;
   dashboard?: boolean;
+  pack?: boolean;
 };
 
 export const FEATURES: Feature[] = [
@@ -16,6 +17,20 @@ export const FEATURES: Feature[] = [
   { id: "db", title: "Database", copy: "We should persist something, eventually.", deps: 2, debt: 5, days: 2, cost: 49 },
   { id: "email", title: "Email verification", copy: "In case they exist.", deps: 2, debt: 4, days: 2, cost: 0 },
   { id: "reset", title: "Password reset", copy: "They will forget. We already have.", deps: 1, debt: 3, days: 1, cost: 0 },
+  { id: "location", title: "Location services", copy: "The weather should know where they are. Probably.", deps: 2, debt: 4, days: 2, cost: 0 },
+  { id: "alerts", title: "Severe weather alerts", copy: "Push panic, professionally.", deps: 2, debt: 5, days: 3, cost: 0 },
+  { id: "forecastai", title: "AI forecast assistant", copy: "A model that is also unsure about rain.", deps: 3, debt: 8, days: 4, cost: 0 },
+  { id: "recurring", title: "Recurring tasks", copy: "Never finish a todo. Forever.", deps: 2, debt: 4, days: 2, cost: 0 },
+  { id: "collab", title: "Team collaboration", copy: "Assign the same task to nobody.", deps: 3, debt: 6, days: 4, cost: 0 },
+  { id: "prod", title: "Productivity analytics", copy: "Measure how little got done.", deps: 3, debt: 7, days: 3, cost: 0, dashboard: true },
+  { id: "cms", title: "CMS", copy: "Edit the landing page without shipping it.", deps: 3, debt: 6, days: 4, cost: 0 },
+  { id: "ab", title: "A/B testing", copy: "Two versions. Zero visitors.", deps: 3, debt: 7, days: 4, cost: 0 },
+  { id: "leads", title: "Lead scoring", copy: "Score the empty funnel.", deps: 2, debt: 5, days: 3, cost: 0 },
+  { id: "history", title: "Calculation history", copy: "Remember every 2+2.", deps: 2, debt: 3, days: 2, cost: 0 },
+  { id: "explain", title: "AI explanation mode", copy: "Explain arithmetic with a paragraph.", deps: 3, debt: 8, days: 4, cost: 0 },
+  { id: "streaks", title: "Streaks", copy: "Shame, gamified.", deps: 2, debt: 4, days: 2, cost: 0 },
+  { id: "remind", title: "Reminders", copy: "Nag them about the habit they invented.", deps: 2, debt: 4, days: 2, cost: 0 },
+  { id: "social", title: "Social accountability", copy: "Publicly fail together.", deps: 3, debt: 6, days: 3, cost: 0 },
   { id: "dark", title: "Dark mode", copy: "Are you sure you want to launch without dark mode?", deps: 1, debt: 2, days: 1, cost: 0 },
   { id: "sync", title: "Cloud sync", copy: "The product should live in the cloud.", deps: 3, debt: 6, days: 3, cost: 49 },
   { id: "notif", title: "Notifications", copy: "Remind them they still haven't shipped.", deps: 2, debt: 5, days: 2, cost: 0 },
@@ -30,6 +45,8 @@ export const FEATURES: Feature[] = [
   { id: "share", title: "Social sharing", copy: "Virality is a feature.", deps: 2, debt: 4, days: 2, cost: 0 },
   { id: "game", title: "Gamification", copy: "Points for not shipping.", deps: 3, debt: 6, days: 4, cost: 0 },
   { id: "growth", title: "Growth analytics", copy: "Measure the absence of traction.", deps: 2, debt: 5, days: 3, cost: 0, dashboard: true },
+  { id: "entpack", title: "Enterprise Readiness", copy: "The enterprise buyer does not exist yet. Prepare anyway.", deps: 2, debt: 6, days: 4, cost: 0, pack: true },
+  { id: "scalepack", title: "Prepare for Scale", copy: "Zero users. Time to go multi-region.", deps: 2, debt: 8, days: 5, cost: 0, pack: true },
   { id: "ragents", title: "Research Agent", copy: "Make it agentic.", deps: 2, debt: 8, days: 3, cost: 0, agent: true },
   { id: "pagent", title: "Planning Agent", copy: "An agent to plan the agents.", deps: 2, debt: 8, days: 3, cost: 0, agent: true },
   { id: "pers", title: "Personalization Agent", copy: "Personalized for no one.", deps: 2, debt: 7, days: 3, cost: 0, agent: true },
@@ -53,6 +70,26 @@ export const FEATURES: Feature[] = [
   { id: "vibe", title: "Rebuild in VibeFlow", copy: "Have you considered rebuilding it in VibeFlow?", deps: 1, debt: 3, days: 1, cost: 0 },
 ];
 
+export const PACKS: Record<string, string[]> = {
+  accounts: ["auth", "db", "email", "reset"],
+  entpack: ["sso", "audit", "rbac", "soc2"],
+  scalepack: ["multi", "wh", "k8s", "idp"],
+  agentic: ["ragents", "pagent", "pers", "aagent", "sagent"],
+};
+
 export const HIDDEN = new Set([
-  "ragents", "pagent", "pers", "aagent", "sagent", "orch", "mon", "mon2", "chain", "vibe",
+  "auth", "db", "email", "reset",
+  "ragents", "pagent", "pers", "aagent", "sagent", "orch", "mon", "mon2",
+  "sso", "audit", "soc2", "rbac", "multi", "wh", "k8s", "idp",
+  "chain", "vibe",
 ]);
+
+export function personalizedIds(idea: string): string[] {
+  const i = idea.toLowerCase();
+  if (i.includes("weather")) return ["location", "alerts", "forecastai"];
+  if (i.includes("todo") || i.includes("task")) return ["recurring", "collab", "prod"];
+  if (i.includes("landing") || i.includes("page")) return ["cms", "ab", "leads"];
+  if (i.includes("calc")) return ["history", "sync", "explain"];
+  if (i.includes("habit")) return ["streaks", "remind", "social"];
+  return ["accounts", "dark", "analytics"];
+}

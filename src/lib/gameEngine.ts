@@ -1,11 +1,10 @@
-import { FEATURES, HIDDEN, type Feature } from "../data/features";
+import { FEATURES, HIDDEN, PACKS, personalizedIds, type Feature } from "../data/features";
 import { EVENTS, type GameEvent } from "../data/events";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { mutateName, nameStage } from "./projectNaming";
 
 export type Notice =
   | { kind: "first" }
-  | { kind: "infra" }
   | { kind: "rec"; f: Feature }
   | { kind: "event"; ev: GameEvent }
   | { kind: "onemore" }
@@ -30,7 +29,10 @@ export type GameState = {
   toast: { title: string; sub: string } | null;
   achievements: string[];
   agenticDone: boolean;
+  enterpriseDone: boolean;
+  scaleDone: boolean;
   ending: "sensible" | "creep" | null;
+  cascade: string[];
 };
 
 export const initialState = (): GameState => ({
@@ -50,7 +52,10 @@ export const initialState = (): GameState => ({
   toast: null,
   achievements: [],
   agenticDone: false,
+  enterpriseDone: false,
+  scaleDone: false,
   ending: null,
+  cascade: [],
 });
 
 export function shipLabel(days: number): string {
@@ -64,17 +69,13 @@ export function shipLabel(days: number): string {
 
 export function statusFor(s: GameState): { t: string; c: string } {
   if (s.features.length <= 1) return { t: "Actually shippable", c: "" };
-  if (s.features.length <= 5) return { t: "Still shippable", c: "warn" };
-  if (s.features.length < 18) return { t: "Fundraiseable", c: "bad" };
+  if (s.features.length <= 8) return { t: "Still shippable", c: "warn" };
+  if (s.features.length < 22) return { t: "Fundraiseable", c: "bad" };
   return { t: "Series A ready", c: "red" };
 }
 
-export function arch(n: number): string {
-  if (n < 2) return "User → App";
-  if (n < 6) return "User → Auth → API → Database";
-  if (n < 12) return "User → CDN → Auth → API → Workers → Database → Analytics → Billing";
-  if (n < 20) return "User → Gateway → Auth → 5 Agents → Orchestrator → API mesh → Warehouse → Dashboards";
-  return "User → SSO → Mesh → Agents → Agents of agents → Kubernetes → Regions → CRM → Nobody remembers why this exists.";
+export function canFinale(s: GameState): boolean {
+  return s.decisions >= 10 && s.features.length >= 28 && s.enterpriseDone && s.scaleDone && s.agenticDone && s.cost >= 9000;
 }
 
 function unlock(s: GameState, id: keyof typeof ACHIEVEMENTS): GameState {
@@ -83,25 +84,12 @@ function unlock(s: GameState, id: keyof typeof ACHIEVEMENTS): GameState {
   return { ...s, achievements: [...s.achievements, id], toast: { title: `🏆 ${a.title}`, sub: a.sub } };
 }
 
-export function nextBeat(s: GameState): GameState {
-  const n = s.features.length;
-  if (n === 1) return { ...s, notice: { kind: "first" } };
-  if (!s.features.includes("auth") && s.features.includes("accounts")) return { ...s, notice: { kind: "infra" } };
-  if (n >= 12 && !s.agenticDone) return { ...s, modal: { kind: "agentic" } };
-  if (s.decisions >= 12) return { ...s, notice: { kind: "reality" } };
-  if (Math.random() < 0.28) {
-    const pool = EVENTS.filter((e) => !e.rare || Math.random() < 0.2);
-    const ev = pool[Math.floor(Math.random() * pool.length)];
-    return { ...s, notice: { kind: "event", ev } };
+export function applyFeature(s: GameState, id: string, countDecision: boolean): GameState {
+  if (id === "core" || s.features.includes(id)) {
+    return countDecision ? { ...s, decisions: s.decisions + 1 } : s;
   }
-  const next = FEATURES.find((f) => !s.features.includes(f.id) && !HIDDEN.has(f.id));
-  if (next) return { ...s, notice: { kind: "rec", f: next } };
-  return { ...s, notice: { kind: "reality" } };
-}
-
-export function addFeature(s: GameState, id: string): GameState {
   const f = FEATURES.find((x) => x.id === id);
-  if (!f || s.features.includes(id)) return s;
+  if (!f) return s;
   let n: GameState = {
     ...s,
     features: [...s.features, id],
@@ -111,19 +99,64 @@ export function addFeature(s: GameState, id: string): GameState {
     cost: Math.max(s.cost, f.cost),
     agents: s.agents + (f.agent ? 1 : 0),
     dashboards: s.dashboards + (f.dashboard ? 1 : 0),
-    stakeholders: Math.min(100, s.stakeholders + (s.features.length + 1 > 5 ? 12 : 4)),
-    decisions: s.decisions + 1,
+    stakeholders: Math.min(100, s.stakeholders + (s.features.length + 1 > 5 ? 8 : 4)),
+    decisions: s.decisions + (countDecision ? 1 : 0),
     modal: null,
   };
-  if (n.features.length === 2) n = unlock(n, "worse");
-  if (id === "analytics") n = unlock(n, "ddd");
+  if (n.features.filter((x) => x !== "core").length === 1) n = unlock(n, "worse");
+  if (id === "analytics" || id === "prod") n = unlock(n, "ddd");
   if (id === "mon" || id === "mon2") n = unlock(n, "aoa");
   if (n.cost > 0) n = unlock(n, "prev");
   if (mutateName(n.idea, nameStage(n.features.length)).includes("Ecosystem")) n = unlock(n, "found");
   if (shipLabel(n.days) === "NEVER") n = unlock(n, "never");
-  if (n.features.length > 8) n = unlock(n, "castle");
+  if (n.features.length > 12) n = unlock(n, "castle");
   if (id === "vibe") n = unlock(n, "omb");
+  return n;
+}
+
+export function nextBeat(s: GameState): GameState {
+  if (canFinale(s)) return { ...s, notice: { kind: "reality" } };
+  if (s.features.length <= 1) return { ...s, notice: { kind: "first" } };
+  if (s.decisions >= 5 && !s.agenticDone) return { ...s, modal: { kind: "agentic" }, notice: s.notice };
+  if (s.agenticDone && s.features.includes("orch") && !s.features.includes("mon")) {
+    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "mon")! } };
+  }
+  if (s.features.includes("mon") && !s.features.includes("mon2")) {
+    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "mon2")! } };
+  }
+  if (s.agenticDone && !s.enterpriseDone) {
+    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "entpack")! } };
+  }
+  if (s.enterpriseDone && !s.scaleDone) {
+    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "scalepack")! } };
+  }
+  const personal = personalizedIds(s.idea).find((id) => !s.features.includes(id));
+  if (personal) {
+    const f = FEATURES.find((x) => x.id === personal)!;
+    return { ...s, notice: { kind: "rec", f } };
+  }
+  if (Math.random() < 0.22) {
+    const pool = EVENTS.filter((e) => !e.rare || Math.random() < 0.15);
+    const ev = pool[Math.floor(Math.random() * pool.length)];
+    return { ...s, notice: { kind: "event", ev } };
+  }
+  const next = FEATURES.find((f) => !s.features.includes(f.id) && !HIDDEN.has(f.id) && !f.pack);
+  if (next) return { ...s, notice: { kind: "rec", f: next } };
+  if (canFinale(s)) return { ...s, notice: { kind: "reality" } };
+  return { ...s, notice: { kind: "onemore" } };
+}
+
+export function addUserChoice(s: GameState, id: string): GameState {
+  let n = applyFeature(s, id, true);
+  const extras = PACKS[id] ?? [];
+  n = { ...n, cascade: extras };
+  if (id === "entpack") n = { ...n, enterpriseDone: true };
+  if (id === "scalepack") n = { ...n, scaleDone: true };
   return nextBeat(n);
+}
+
+export function applySilent(s: GameState, id: string): GameState {
+  return applyFeature(s, id, false);
 }
 
 export function receiptText(s: GameState): string {

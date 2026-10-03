@@ -1,5 +1,7 @@
 import { FEATURES } from "../data/features";
-import type { GameState } from "../lib/gameEngine";
+import { canFinale, type GameState } from "../lib/gameEngine";
+import ArchMap from "./ArchMap";
+import Metric from "./Metric";
 
 type Props = {
   s: GameState;
@@ -8,11 +10,9 @@ type Props = {
   late: boolean;
   productName: string;
   shipDate: string;
-  architecture: string;
   nextId: string;
   onAdd: (id: string) => void;
   onSkip: (id: string) => void;
-  onInfra: () => void;
   onShip: () => void;
   onYesAgent: () => void;
   onNoAgent: () => void;
@@ -34,22 +34,22 @@ export default function Dashboard(p: Props) {
         <span className={`dot ${p.st.c}`} /> {p.st.t}
       </div>
       <div className="metrics">
-        <div className="card"><label>Features</label><div className="v">{s.features.length}</div></div>
-        <div className="card"><label>Dependencies</label><div className="v">{s.deps}</div></div>
-        <div className="card"><label>Technical debt</label><div className="v">{s.debt}%</div></div>
-        <div className="card"><label>Users interviewed</label><div className="v">0</div></div>
-        <div className="card"><label>Estimated ship date</label><div className="v">{p.shipDate}</div></div>
+        <Metric label="Features" value={s.features.length} />
+        <Metric label="Dependencies" value={s.deps} />
+        <Metric label="Technical debt" value={`${s.debt}%`} />
+        <Metric label="Users interviewed" value={0} />
+        <Metric label="Estimated ship date" value={p.shipDate} />
         {p.extra && (
           <>
-            <div className="card"><label>Stakeholder expectations</label><div className="v">{s.stakeholders}%</div></div>
-            <div className="card"><label>Paying users</label><div className="v">0</div></div>
+            <Metric label="Stakeholder expectations" value={`${s.stakeholders}%`} />
+            <Metric label="Paying users" value={0} />
           </>
         )}
         {p.late && (
           <>
-            <div className="card"><label>Monthly infrastructure</label><div className="v">€{s.cost}</div></div>
-            <div className="card"><label>AI agents</label><div className="v">{s.agents}</div></div>
-            <div className="card"><label>Meetings scheduled</label><div className="v">{Math.max(0, s.features.length * 2 - 4)}</div></div>
+            <Metric label="Monthly infrastructure" value={`€${s.cost}`} />
+            <Metric label="AI agents" value={s.agents} />
+            <Metric label="Meetings scheduled" value={Math.max(0, s.features.length * 2 - 4)} />
           </>
         )}
       </div>
@@ -65,13 +65,14 @@ export default function Dashboard(p: Props) {
             <label>Roadmap</label>
             <ul className="feat-list">
               {s.features.map((id) => (
-                <li key={id}>{id === "core" ? s.idea : FEATURES.find((f) => f.id === id)?.title}</li>
+                <li key={id} className={s.cascade.includes(id) || id === s.features[s.features.length - 1] ? "pop" : ""}>
+                  {id === "core" ? s.idea : FEATURES.find((f) => f.id === id)?.title}
+                </li>
               ))}
             </ul>
           </div>
           <div className="card" style={{ marginTop: 10 }}>
-            <label>Architecture {p.late ? "complexity" : ""}</label>
-            <p className="arch">{p.architecture}</p>
+            <ArchMap count={s.features.length} />
           </div>
         </div>
       </div>
@@ -96,16 +97,6 @@ function Notice(p: Props) {
       <div className="row-btns">
         <button className="primary" onClick={() => p.onAdd("accounts")}>+ Add accounts</button>
         <button className="ghost" onClick={() => p.onSkip("accounts")}>Ship without it</button>
-      </div>
-    </div>
-  );
-  if (n.kind === "infra") return (
-    <div className="notice">
-      <h3>Accounts require a few basics.</h3>
-      <p className="quote">Authentication, database, email verification, password reset.</p>
-      <div className="row-btns">
-        <button className="primary" onClick={p.onInfra}>Add required infrastructure</button>
-        <button className="ghost" onClick={() => p.onSkip("auth")}>Maybe we don't need accounts</button>
       </div>
     </div>
   );
@@ -137,7 +128,7 @@ function Notice(p: Props) {
     <div className="notice">
       <h3>Accept reality</h3>
       <p className="quote">The planning horizon has left the building.</p>
-      <div className="row-btns"><button className="primary" onClick={p.onReality}>Accept reality</button></div>
+      <div className="row-btns"><button className="primary" onClick={p.onReality} disabled={!canFinale(p.s)}>Accept reality</button></div>
     </div>
   );
 }
@@ -174,7 +165,7 @@ function Modal(p: Props) {
         <p className="quote">✅ Logo<br />✅ Analytics<br />✅ AI<br />✅ Enterprise auth<br />✅ Mobile roadmap<br />✅ Agent orchestration<br />✅ SOC 2 planning<br />❌ Talk to one user</p>
         <div className="row-btns">
           <button className="ghost" disabled>Talk to one user</button>
-          <button className="primary" onClick={p.onReality}>Accept reality</button>
+          <button className="primary" onClick={p.onReality} disabled={!canFinale(p.s)}>Accept reality</button>
         </div>
       </div>
     </div>
