@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { mutateName } from "../lib/projectNaming";
-import { receiptText, shipLabel, type GameState } from "../lib/gameEngine";
+import { euro, formatConfidence, receiptText, shipLabel, unrealizedValue, type GameState } from "../lib/gameEngine";
 
 export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () => void }) {
   const [copied, setCopied] = useState(false);
@@ -25,7 +25,7 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#6b665c";
     ctx.font = "22px sans-serif";
-    ctx.fillText("SCOPE CREEP™", 64, 80);
+    ctx.fillText("SCOPE CREEP™ EXIT STATEMENT", 64, 80);
     ctx.fillStyle = "#141414";
     ctx.font = "28px serif";
     ctx.fillText("I started building:", 64, 150);
@@ -36,15 +36,14 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     ctx.font = "bold 40px serif";
     wrap(ctx, mutateName(s.idea, 4), 64, 400, 950, 48);
     const rows: [string, string][] = [
-      ["Original features", "1"],
-      ["Final features", String(s.features.length)],
-      ["Dependencies", String(s.deps)],
-      ["AI agents", String(s.agents)],
-      ["Technical debt", `${s.debt}%`],
-      ["Infrastructure/month", `€${s.cost}`],
-      ["Users interviewed", "0"],
-      ["Paying users", "0"],
-      ["Ship date", shipLabel(s.days)],
+      ["Portfolio value", euro(unrealizedValue(s.features.length))],
+      ["Liquid value", "€0"],
+      ["Features", String(s.features.length)],
+      ["Downline", String(s.deps)],
+      ["AI exposure", `${s.agents} agents`],
+      ["Launch Confidence", formatConfidence(s.launchConfidence)],
+      ["Withdrawal", "FROZEN"],
+      ["Ship date", "NEVER"],
     ];
     ctx.font = "28px sans-serif";
     rows.forEach((r, i) => {
@@ -55,12 +54,13 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
       ctx.fillText(r[1], 700, y);
     });
     ctx.font = "bold 64px serif";
-    ctx.fillText(shipLabel(s.days) === "NEVER" ? "NEVER" : shipLabel(s.days), 64, 1100);
-    ctx.font = "24px sans-serif";
+    ctx.font = "bold 36px serif";
+    ctx.fillText("YOU WERE THE EXIT LIQUIDITY.", 64, 1120);
+    ctx.font = "22px sans-serif";
     ctx.fillStyle = "#6b665c";
-    ctx.fillText("You successfully avoided shipping.", 64, 1180);
+    ctx.fillText("rug pull complete", 64, 1180);
     const a = document.createElement("a");
-    a.download = "scope-creep-receipt.png";
+    a.download = "scope-creep-exit.png";
     a.href = canvas.toDataURL("image/png");
     a.click();
   }
@@ -90,29 +90,31 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
   return (
     <div className="wrap">
       <div className="receipt" id="receipt-card">
-        <div className="tiny">SCOPE CREEP™</div>
-        <p className="whisper">I started building:</p>
+        <div className="tiny">SCOPE CREEP™ EXIT STATEMENT</div>
+        <p className="whisper">I started with:</p>
         <h1>{s.idea}</h1>
-        <p className="whisper" style={{ marginTop: 12 }}>I ended up building:</p>
+        <p className="whisper" style={{ marginTop: 12 }}>I ended up with:</p>
         <h1>{mutateName(s.idea, 4)}</h1>
         <div className="rgrid">
-          <div>Original features</div><div>1</div>
-          <div>Final features</div><div>{s.features.length}</div>
-          <div>Dependencies</div><div>{s.deps}</div>
-          <div>AI agents</div><div>{s.agents}</div>
-          <div>Technical debt</div><div>{s.debt}%</div>
-          <div>Infrastructure/month</div><div>€{s.cost}</div>
+          <div>Initial investment</div><div>One innocent idea</div>
+          <div>Portfolio value</div><div>{euro(unrealizedValue(s.features.length))}</div>
+          <div>Liquid value</div><div>€0</div>
+          <div>Features accumulated</div><div>{s.features.length}</div>
+          <div>Downline dependencies</div><div>{s.deps}</div>
+          <div>AI exposure</div><div>{s.agents} agents</div>
           <div>Users interviewed</div><div>0</div>
           <div>Paying users</div><div>0</div>
-          <div>Ship date</div><div>{shipLabel(s.days)}</div>
+          <div>Launch Confidence</div><div>{formatConfidence(s.launchConfidence)}</div>
+          <div>Withdrawal status</div><div>FROZEN</div>
         </div>
-        <div className="never">{shipLabel(s.days)}</div>
-        <p style={{ marginTop: 12 }}>You successfully avoided shipping.</p>
-        <p className="whisper">scope creep achieved ✓</p>
+        <div className="never">NEVER</div>
+        <p style={{ marginTop: 12 }}>Congratulations.</p>
+        <h1>YOU WERE THE EXIT LIQUIDITY.</h1>
+        <p className="whisper">rug pull complete ✓</p>
         <div className="row-btns" style={{ marginTop: 16 }}>
           <button className="primary" onClick={onRestart}>Try another innocent idea</button>
-          <button className="ghost" onClick={copy}>{copied ? "✓ Copied" : "Copy my result"}</button>
-          <button className="ghost" onClick={download}>Download receipt</button>
+          <button className="ghost" onClick={copy}>{copied ? "✓ Copied" : "Copy my exit statement"}</button>
+          <button className="ghost" onClick={download}>Download exit statement</button>
         </div>
       </div>
     </div>

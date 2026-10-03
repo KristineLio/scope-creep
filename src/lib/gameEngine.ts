@@ -10,7 +10,17 @@ export type Notice =
   | { kind: "onemore" }
   | { kind: "reality" };
 
-export type Modal = { kind: "agentic" } | { kind: "dark" } | { kind: "checklist" } | null;
+export type Modal =
+  | { kind: "agentic" }
+  | { kind: "dark" }
+  | { kind: "checklist" }
+  | { kind: "confidence"; featureId: string; before: number; after: number; step: number }
+  | { kind: "withdraw"; variant: 0 | 1 | 2 | 3; featureId: string }
+  | null;
+
+export const CONFIDENCE_STEPS = [72, 86, 93, 97, 99.1, 99.7, 99.93];
+
+const CONFIDENCE_PICKS = ["analytics", "ai", "entpack", "scalepack", "mobile", "growth", "edash"];
 
 export type GameState = {
   screen: "landing" | "dash" | "end";
@@ -33,6 +43,11 @@ export type GameState = {
   scaleDone: boolean;
   ending: "sensible" | "creep" | null;
   cascade: string[];
+  launchConfidence: number;
+  shipInterventions: number;
+  confidenceUnlocked: boolean;
+  vibesHint: boolean;
+  recruitToast: string | null;
 };
 
 export const initialState = (): GameState => ({
@@ -56,6 +71,11 @@ export const initialState = (): GameState => ({
   scaleDone: false,
   ending: null,
   cascade: [],
+  launchConfidence: 72,
+  shipInterventions: 0,
+  confidenceUnlocked: false,
+  vibesHint: false,
+  recruitToast: null,
 });
 
 export function shipLabel(days: number): string {
@@ -76,6 +96,31 @@ export function statusFor(s: GameState): { t: string; c: string } {
 
 export function canFinale(s: GameState): boolean {
   return s.decisions >= 10 && s.features.length >= 28 && s.enterpriseDone && s.scaleDone && s.agenticDone && s.cost >= 9000;
+}
+
+export function unrealizedValue(n: number): number {
+  if (n <= 4) return 0;
+  if (n <= 8) return 12000;
+  if (n <= 12) return 180000;
+  if (n <= 17) return 1400000;
+  if (n <= 22) return 4200000;
+  if (n <= 27) return 7800000;
+  if (n <= 33) return 12600000;
+  return 18420000;
+}
+
+export function euro(n: number): string {
+  if (n >= 1000000) return `€${(n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1)}M`;
+  if (n >= 1000) return `€${Math.round(n / 1000)}K`;
+  return `€${n}`;
+}
+
+export function fomoLabel(s: GameState): string {
+  if (s.shipInterventions >= 4) return "FOUNDER MODE";
+  if (s.shipInterventions >= 3) return "CRITICAL";
+  if (s.shipInterventions >= 2) return "HIGH";
+  if (s.shipInterventions >= 1) return "ELEVATED";
+  return "LOW";
 }
 
 function unlock(s: GameState, id: keyof typeof ACHIEVEMENTS): GameState {
@@ -111,6 +156,8 @@ export function applyFeature(s: GameState, id: string, countDecision: boolean): 
   if (shipLabel(n.days) === "NEVER") n = unlock(n, "never");
   if (n.features.length > 12) n = unlock(n, "castle");
   if (id === "vibe") n = unlock(n, "omb");
+  if (unrealizedValue(n.features.length) >= 12000) n = unlock(n, "numup");
+  if (n.deps >= 10) n = unlock(n, "downline");
   return n;
 }
 
@@ -149,7 +196,7 @@ export function nextBeat(s: GameState): GameState {
 export function addUserChoice(s: GameState, id: string): GameState {
   let n = applyFeature(s, id, true);
   const extras = PACKS[id] ?? [];
-  n = { ...n, cascade: extras };
+  n = { ...n, cascade: extras, recruitToast: extras.length ? `${FEATURES.find(f=>f.id===id)?.title ?? "Feature"} recruited ${extras.length} new features.` : null };
   if (id === "entpack") n = { ...n, enterpriseDone: true };
   if (id === "scalepack") n = { ...n, scaleDone: true };
   return nextBeat(n);
@@ -159,20 +206,96 @@ export function applySilent(s: GameState, id: string): GameState {
   return applyFeature(s, id, false);
 }
 
+export function formatConfidence(n: number): string {
+  return Number.isInteger(n) ? `${n}%` : `${n.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}%`;
+}
+
+export function pickConfidenceFeature(s: GameState): string {
+  const ordered = [...CONFIDENCE_PICKS, ...FEATURES.filter((f) => !HIDDEN.has(f.id)).map((f) => f.id)];
+  return ordered.find((id) => !s.features.includes(id) && id !== "core") ?? "ai";
+}
+
+export function beginShip(s: GameState): GameState {
+  if (s.features.length <= 3 && s.decisions <= 2) return { ...s, ending: "sensible", screen: "end" };
+  const step = Math.min(s.shipInterventions, CONFIDENCE_STEPS.length - 2);
+  const before = CONFIDENCE_STEPS[step];
+  const after = CONFIDENCE_STEPS[Math.min(step + 1, CONFIDENCE_STEPS.length - 1)];
+  const featureId = pickConfidenceFeature(s);
+  const escalated = s.agenticDone && s.enterpriseDone && s.scaleDone;
+  if (s.shipInterventions >= 3 && escalated) return { ...s, modal: { kind: "checklist" }, confidenceUnlocked: true };
+  if (s.launchConfidence >= 99.93 && s.shipInterventions >= 3) return { ...s, modal: { kind: "checklist" }, confidenceUnlocked: true };
+  if (s.shipInterventions >= 1 && s.features.length >= 12) {
+    const variant = Math.min(3, s.shipInterventions) as 0 | 1 | 2 | 3;
+    const wfeat = ["sso", "k8s", "edash", featureId][variant];
+    return {
+      ...s,
+      confidenceUnlocked: true,
+      launchConfidence: before,
+      modal: { kind: "withdraw", variant, featureId: s.features.includes(wfeat) ? featureId : wfeat },
+    };
+  }
+  return {
+    ...s,
+    confidenceUnlocked: true,
+    vibesHint: s.confidenceUnlocked ? s.vibesHint : true,
+    launchConfidence: before,
+    modal: { kind: "confidence", featureId, before, after, step },
+  };
+}
+
+export function acceptConfidence(s: GameState): GameState {
+  if (!s.modal || s.modal.kind !== "confidence") return s;
+  const { featureId, after } = s.modal;
+  let n: GameState = {
+    ...s,
+    launchConfidence: Math.min(after, 99.93),
+    shipInterventions: s.shipInterventions + 1,
+    modal: null,
+    vibesHint: false,
+  };
+  n = addUserChoice(n, featureId);
+  return n;
+}
+
+export function declineConfidence(s: GameState): GameState {
+  if (!s.modal || (s.modal.kind !== "confidence" && s.modal.kind !== "withdraw")) return s;
+  const next = s.shipInterventions + 1;
+  const escalated = s.agenticDone && s.enterpriseDone && s.scaleDone;
+  if (next >= 3 && (escalated || s.features.length > 18)) {
+    return { ...s, shipInterventions: next, modal: { kind: "checklist" }, confidenceUnlocked: true, vibesHint: false };
+  }
+  return { ...s, shipInterventions: next, modal: null, vibesHint: false };
+}
+
+export function acceptWithdraw(s: GameState): GameState {
+  if (!s.modal || s.modal.kind !== "withdraw") return s;
+  const { featureId } = s.modal;
+  return addUserChoice({
+    ...s,
+    shipInterventions: s.shipInterventions + 1,
+    modal: null,
+    launchConfidence: Math.min(CONFIDENCE_STEPS[Math.min(s.shipInterventions + 1, CONFIDENCE_STEPS.length - 1)], 99.93),
+  }, featureId);
+}
+
 export function receiptText(s: GameState): string {
-  return `SCOPE CREEP™
-I started building: ${s.idea}
-I ended up building: ${mutateName(s.idea, 4)}
-Original features: 1
-Final features: ${s.features.length}
-Dependencies: ${s.deps}
-AI agents: ${s.agents}
-Dashboards: ${s.dashboards}
-Technical debt: ${s.debt}%
-Infrastructure: €${s.cost}/mo
-Users interviewed: 0
+  return `SCOPE CREEP™ EXIT STATEMENT
+
+I started with:
+${s.idea}
+
+I ended up with:
+${mutateName(s.idea, 4)}
+
+Portfolio value: ${euro(unrealizedValue(s.features.length))}
+Liquid value: €0
+Features accumulated: ${s.features.length}
+Downline dependencies: ${s.deps}
+AI exposure: ${s.agents} agents
 Paying users: 0
-Original ship date: Today
-Current ship date: ${shipLabel(s.days)}
-You successfully avoided shipping.`;
+Launch confidence: ${formatConfidence(s.launchConfidence)}
+Withdrawal status: FROZEN
+Ship date: NEVER
+
+YOU WERE THE EXIT LIQUIDITY.`;
 }

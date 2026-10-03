@@ -1,5 +1,5 @@
 import { FEATURES } from "../data/features";
-import { canFinale, type GameState } from "../lib/gameEngine";
+import { euro, fomoLabel, formatConfidence, unrealizedValue, type GameState } from "../lib/gameEngine";
 import ArchMap from "./ArchMap";
 import Metric from "./Metric";
 
@@ -14,6 +14,9 @@ type Props = {
   onAdd: (id: string) => void;
   onSkip: (id: string) => void;
   onShip: () => void;
+  onAcceptConfidence: () => void;
+  onDeclineConfidence: () => void;
+  onAcceptWithdraw: () => void;
   onYesAgent: () => void;
   onNoAgent: () => void;
   onIrresponsible: () => void;
@@ -52,13 +55,39 @@ export default function Dashboard(p: Props) {
             <Metric label="Meetings scheduled" value={Math.max(0, s.features.length * 2 - 4)} />
           </>
         )}
+        {p.extra && (
+          <div className="card">
+            <label>Unrealized Product Value</label>
+            <div className="v">{euro(unrealizedValue(s.features.length))}</div>
+            <label>Realized Revenue</label>
+            <div className="v">€0</div>
+            <p className="whisper">Fundamentals remain optional.</p>
+          </div>
+        )}
+        {p.late && (
+          <div className="card">
+            <label>ScopeCoin™ Market Cap</label>
+            <div className="v">{euro(Math.max(unrealizedValue(s.features.length), 180000))}</div>
+            <p className="whisper">Circulating product 0 · Shipping liquidity LOW</p>
+            <p className="whisper">Backed by features. Mostly features.</p>
+          </div>
+        )}
+        {s.confidenceUnlocked && (
+          <div className="card">
+            <label>Launch Confidence</label>
+            <div className="v">{formatConfidence(s.launchConfidence)}</div>
+            <div className="conf-track" aria-hidden="true">
+              <div className="conf-fill" style={{ width: `${Math.min(s.launchConfidence, 99.93)}%` }} />
+            </div>
+            {s.vibesHint && <p className="whisper">Powered by proprietary vibes</p>}
+            <p className="whisper">FOMO {fomoLabel(s)}</p>
+          </div>
+        )}
       </div>
       <div className="layout">
         <div>
           <Notice {...p} />
-          <button className="ship" onClick={p.onShip}>
-            {s.features.length > 10 ? "Ship after one more feature" : "Ship Now"}
-          </button>
+          <button className="ship" onClick={p.onShip}>Ship Now</button>
         </div>
         <div>
           <div className="card">
@@ -72,11 +101,24 @@ export default function Dashboard(p: Props) {
             </ul>
           </div>
           <div className="card" style={{ marginTop: 10 }}>
-            <ArchMap count={s.features.length} />
+            <ArchMap count={s.features.length} deps={s.deps} />
           </div>
         </div>
       </div>
       {s.modal && <Modal {...p} />}
+      {p.late && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <p className="quote">“My project has never shipped, but the valuation speaks for itself.”</p>
+          <p className="whisper">— Founder #1847 · Trending in Pre-Revenue</p>
+          <p className="whisper">12,481 founders are currently not shipping. *Sample size unavailable.</p>
+        </div>
+      )}
+      {s.recruitToast && (
+        <div className="toast" role="status">
+          <strong>Congratulations!</strong>
+          <div className="whisper">{s.recruitToast}</div>
+        </div>
+      )}
       {s.toast && (
         <div className="toast" role="status">
           <strong>{s.toast.title}</strong>
@@ -119,22 +161,24 @@ function Notice(p: Props) {
   );
   if (n.kind === "onemore") return (
     <div className="notice">
-      <h3>Ship after one more feature</h3>
-      <p className="quote">Just one more. Then we launch. We mean it.</p>
-      <div className="row-btns"><button className="primary" onClick={() => p.onAdd(p.nextId)}>Add one more</button></div>
+      <h3>Still technically possible.</h3>
+      <p className="quote">The launch window remains open. Probably.</p>
+      <div className="row-btns"><button className="primary" onClick={() => p.onAdd(p.nextId)}>Add {FEATURES.find(f=>f.id===p.nextId)?.title ?? "one more"}</button></div>
     </div>
   );
   return (
     <div className="notice">
       <h3>Accept reality</h3>
       <p className="quote">The planning horizon has left the building.</p>
-      <div className="row-btns"><button className="primary" onClick={p.onReality} disabled={!canFinale(p.s)}>Accept reality</button></div>
+      <div className="row-btns"><button className="primary" onClick={p.onReality}>Accept reality</button></div>
     </div>
   );
 }
 
 function Modal(p: Props) {
   const m = p.s.modal;
+  if (m?.kind === "confidence") return <ConfidenceModal p={p} />;
+  if (m?.kind === "withdraw") return <WithdrawModal p={p} />;
   if (m?.kind === "agentic") return (
     <div className="overlay">
       <div className="modal-card">
@@ -165,9 +209,80 @@ function Modal(p: Props) {
         <p className="quote">✅ Logo<br />✅ Analytics<br />✅ AI<br />✅ Enterprise auth<br />✅ Mobile roadmap<br />✅ Agent orchestration<br />✅ SOC 2 planning<br />❌ Talk to one user</p>
         <div className="row-btns">
           <button className="ghost" disabled>Talk to one user</button>
-          <button className="primary" onClick={p.onReality} disabled={!canFinale(p.s)}>Accept reality</button>
+          <button className="primary" onClick={p.onReality}>Accept reality</button>
         </div>
       </div>
     </div>
   );
 }
+
+function ConfidenceModal({ p }: { p: Props }) {
+  const m = p.s.modal;
+  if (!m || m.kind !== "confidence") return null;
+  const feat = FEATURES.find((f) => f.id === m.featureId);
+  const name = feat?.title ?? "one more feature";
+  const copy = copies[Math.min(m.step, copies.length - 1)];
+  const late = m.before >= 99.7;
+  return (
+    <div className="overlay">
+      <div className="modal-card">
+        {late ? (
+          <>
+            <p className="whisper">Launch Confidence: {formatConfidence(m.before)}</p>
+            <h2>You're statistically almost ready.</h2>
+            <p className="quote">But are you really willing to risk everything over 0.07%?</p>
+          </>
+        ) : (
+          <>
+            <p className="whisper">{copy.headline}</p>
+            <h2>Launch Confidence {formatConfidence(m.before)}</h2>
+            <p className="quote">{copy.body.replace("FEATURE", name)} {formatConfidence(m.after)}</p>
+          </>
+        )}
+        <div className="conf-track" aria-hidden="true">
+          <div className="conf-fill" style={{ width: `${Math.min(m.before, 99.93)}%` }} />
+        </div>
+        <div className="row-btns" style={{ marginTop: 14 }}>
+          <button className="primary" onClick={p.onAcceptConfidence}>{late ? "Add one final safeguard" : copy.primary}</button>
+          <button className="ghost" onClick={p.onDeclineConfidence}>{late ? "Yes. Ship the damn thing." : `${copy.secondary} ${formatConfidence(m.before)}`}</button>
+        </div>
+        <p className="whisper">{copy.note}</p>
+      </div>
+    </div>
+  );
+}
+
+function WithdrawModal({ p }: { p: Props }) {
+  const m = p.s.modal;
+  if (!m || m.kind !== "withdraw") return null;
+  const name = FEATURES.find((f) => f.id === m.featureId)?.title ?? "one feature";
+  const variants = [
+    { h: "Withdrawal temporarily restricted", q: `Your project requires one final verification step. To unlock shipping: Add ${name}`, p: "Verify and continue →", s: "Proceed with limited protection", n: "Shipping eligibility may vary by scope." },
+    { h: "Network congestion detected", q: "Your project is ready to ship, but current infrastructure conditions are suboptimal. Required shipping gas fee: 1 Kubernetes cluster", p: "Pay in infrastructure →", s: "Attempt low-fee shipping", n: "No actual currency is involved. Only your remaining free time." },
+    { h: "Your account is 99.7% verified", q: `Deposit one final feature to unlock your launch. Recommended: ${name}`, p: "Complete verification →", s: "Withdraw project anyway", n: "Launch Confidence is not financial advice." },
+    { h: "Shipping liquidity is temporarily unavailable", q: `Launch Confidence 99.93%. Unrealized value looks excellent. Realized revenue: €0. Everything is performing beautifully except the part where you actually ship.`, p: "Add one final safeguard", s: "Withdraw anyway", n: "Past feature additions do not guarantee future shipping." },
+  ];
+  const v = variants[m.variant];
+  return (
+    <div className="overlay">
+      <div className="modal-card">
+        <h2>{v.h}</h2>
+        <p className="quote">{v.q}</p>
+        <div className="row-btns">
+          <button className="primary" onClick={p.onAcceptWithdraw}>{v.p}</button>
+          <button className="ghost" onClick={p.onDeclineConfidence}>{v.s}</button>
+        </div>
+        <p className="whisper">{v.n}</p>
+      </div>
+    </div>
+  );
+}
+
+const copies = [
+  { headline: "Your launch is almost ready.", body: "Adding FEATURE could improve projected launch confidence to", primary: "Increase my odds →", secondary: "Ship at", note: "*No founders were interviewed." },
+  { headline: "Strong momentum detected.", body: "Top-performing products usually add FEATURE before launch. Projected upside:", primary: "Protect my upside →", secondary: "Ship at", note: "Past feature additions do not guarantee future shipping." },
+  { headline: "High-conviction feature detected.", body: "FEATURE could materially de-risk your launch. Elite launch readiness:", primary: "De-risk my launch →", secondary: "Accept unnecessary risk ·", note: "Your scope may go up as well as up." },
+  { headline: "You're extremely close.", body: "FEATURE could move you into elite launch-readiness territory:", primary: "Increase launch confidence →", secondary: "Ship recklessly ·", note: "0 paying users were consulted." },
+  { headline: "Why gamble with the remaining 0.9%?", body: "FEATURE is a high-conviction downside hedge. Projected confidence:", primary: "Protect the downside →", secondary: "I understand the risk ·", note: "Launch Confidence is not financial advice." },
+  { headline: "Final optimization detected.", body: "FEATURE could be the difference between shipping and a cautionary LinkedIn post:", primary: "One final safeguard →", secondary: "Ship anyway ·", note: "Results based on proprietary vibes." },
+];

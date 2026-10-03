@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { FEATURES, PACKS } from "./data/features";
 import {
+  acceptConfidence,
+  acceptWithdraw,
   addUserChoice,
   applySilent,
+  beginShip,
   canFinale,
+  declineConfidence,
   initialState,
   nextBeat,
-  receiptText,
   shipLabel,
   statusFor,
   type GameState,
@@ -61,13 +64,7 @@ export default function App() {
   }
 
   function ship() {
-    setS((x) => {
-      const n = x.features.length;
-      if (n <= 3 && x.decisions <= 2) return { ...x, ending: "sensible", screen: "end" };
-      if (n < 10) return { ...x, modal: { kind: "dark" } };
-      if (!canFinale(x)) return { ...x, notice: { kind: "onemore" } };
-      return { ...x, modal: { kind: "checklist" } };
-    });
+    setS((x) => beginShip(x));
   }
 
   function agentPack(force: boolean) {
@@ -107,10 +104,13 @@ export default function App() {
       onAdd={onAdd}
       onSkip={skip}
       onShip={ship}
+      onAcceptConfidence={() => setS((x) => acceptConfidence(x))}
+      onDeclineConfidence={() => setS((x) => declineConfidence(x))}
+      onAcceptWithdraw={() => setS((x) => acceptWithdraw(x))}
       onYesAgent={() => agentPack(true)}
       onNoAgent={() => agentPack(false)}
       onIrresponsible={() => setS((x) => ({ ...x, modal: null, ending: "sensible", screen: "end" }))}
-      onReality={() => canFinale(s) && setS((x) => ({ ...x, modal: null, ending: "creep", screen: "end" }))}
+      onReality={() => setS((x) => ({ ...x, modal: null, ending: "creep", screen: "end" }))}
       onEvent={() => {
         const ev = s.notice && s.notice.kind === "event" ? s.notice.ev : null;
         if (ev?.add) onAdd(ev.add);
