@@ -6,6 +6,7 @@ import SuccessPlan from "./SuccessPlan";
 
 type Props = {
   s: GameState;
+  scopeBurst?: boolean;
   st: { t: string; c: string };
   extra: boolean;
   late: boolean;
@@ -18,6 +19,7 @@ type Props = {
   onAcceptConfidence: () => void;
   onDeclineConfidence: () => void;
   onAcceptWithdraw: () => void;
+  onResistWithdraw: () => void;
   onYesAgent: () => void;
   onNoAgent: () => void;
   onIrresponsible: () => void;
@@ -28,7 +30,7 @@ type Props = {
 export default function Dashboard(p: Props) {
   const { s } = p;
   return (
-    <div className="wrap">
+    <div className={`wrap ${p.scopeBurst ? "scope-burst" : ""}`}>
       <header className="top">
         <div className="brand">SCOPE CREEP™</div>
         <div className="badge">{p.productName}</div>
@@ -48,19 +50,19 @@ export default function Dashboard(p: Props) {
       <div className="layout">
         <div>
           <Notice {...p} />
-          <button className="ship" onClick={p.onShip}>Ship Now</button>
+          <button className="ship" onClick={p.onShip}>{shipButtonLabel(s)}</button>
         </div>
         <div>
           <SuccessPlan s={s} />
           <div className="card" style={{ marginTop: 10 }}>
-            <ArchMap count={s.features.length} deps={s.deps} />
+            <ArchMap count={s.features.length} deps={s.deps} features={s.features} />
           </div>
         </div>
       </div>
       {s.modal && <Modal {...p} />}
 
       <div className="toast-stack">
-        {s.recruitToast && (
+        {s.recruitToast && !s.toast && (
           <div className="toast" role="status">
             <strong>Great work!</strong>
             <div className="whisper">{s.recruitToast}</div>
@@ -199,10 +201,17 @@ function WithdrawModal({ p }: { p: Props }) {
         <div className="v" style={{ fontSize: 28, marginBottom: 12 }}>1 Kubernetes cluster</div>
         <div className="row-btns">
           <button className="primary" onClick={p.onAcceptWithdraw}>Pay in infrastructure →</button>
-          <button className="ghost" onClick={p.onDeclineConfidence}>Withdraw project anyway</button>
+          <button className="ghost" onClick={p.onResistWithdraw}>Withdraw project anyway</button>
         </div>
         <p className="whisper">No actual currency is involved. Only your remaining free time.</p>
       </div>
     </div>
   );
+}
+
+function shipButtonLabel(s: GameState): string {
+  if (!s.confidenceUnlocked) return "Ship Now";
+  if (!s.agenticDone) return "Try Shipping Again";
+  if (!s.features.includes("k8s")) return "Ship Now. Seriously.";
+  return "Please Just Ship It";
 }

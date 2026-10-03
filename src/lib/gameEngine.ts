@@ -1,7 +1,7 @@
 import { FEATURES, HIDDEN, PACKS, type Feature } from "../data/features";
 import { EVENTS, type GameEvent } from "../data/events";
 import { ACHIEVEMENTS } from "../data/achievements";
-import { mutateName, nameStage } from "./projectNaming";
+import { ideaPunchline, mutateName, nameStage } from "./projectNaming";
 
 export type Notice =
   | { kind: "first" }
@@ -286,10 +286,18 @@ export function declineConfidence(s: GameState): GameState {
   if (s.modal.kind === "withdraw" && s.modal.phase === "finale") {
     return { ...s, ending: "creep", screen: "end", launchConfidence: 99.93, sawFinalWithdraw: true, modal: null };
   }
-  if (s.modal.kind === "withdraw") {
-    return { ...s, ending: "creep", screen: "end", launchConfidence: 99.93, sawFinalWithdraw: true, modal: null };
-  }
   return { ...s, modal: null };
+}
+
+export function resistWithdraw(s: GameState): GameState {
+  if (!s.modal || s.modal.kind !== "withdraw" || s.modal.phase !== "k8s") return s;
+  return {
+    ...acceptWithdraw(s),
+    toast: {
+      title: "WITHDRAWAL CONVERTED",
+      sub: "Your withdrawal request was automatically converted into 1 Kubernetes cluster.",
+    },
+  };
 }
 
 export function acceptWithdraw(s: GameState): GameState {
@@ -311,17 +319,18 @@ export function acceptWithdraw(s: GameState): GameState {
 }
 
 export function receiptText(s: GameState): string {
-  return `SCOPE CREEP™ EXIT STATEMENT
+  return `I tried to ship: ${s.idea}
 
-Initial investment: One innocent idea
-Portfolio value: ${euro(unrealizedValue(s.features.length))}
-Liquid value: €0
-Features accumulated: ${s.features.length}
-Downline dependencies: ${s.deps}
-Paying users: 0
-Launch Confidence: 99.93%
-Withdrawal status: FROZEN
+Scope Creep turned it into:
+${mutateName(s.idea, 4)}
+
+${s.features.length} features
+${s.deps} dependencies
+${euro(unrealizedValue(s.features.length))} portfolio value
+€0 revenue
 Ship date: NEVER
+
+${ideaPunchline(s.idea, s.features.length)}
 
 YOU WERE THE EXIT LIQUIDITY.`;
 }

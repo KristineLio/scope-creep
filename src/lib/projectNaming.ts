@@ -14,6 +14,17 @@ export function mutateName(idea: string, stage: number): string {
   return names[Math.min(stage, 4)];
 }
 
+export function ideaPunchline(idea: string, count: number): string {
+  const i = idea.toLowerCase();
+  if (i.includes("todo") || i.includes("task")) return `You built ${count} features to avoid checking off one task.`;
+  if (i.includes("weather")) return "Forecast: 100% chance of never shipping.";
+  if (i.includes("timer") || i.includes("time")) return "Time to ship: NEVER. At least the timer works.";
+  if (i.includes("calc")) return `Final calculation: €0 revenue ÷ ${count} features.`;
+  if (i.includes("landing") || i.includes("page")) return "Conversion rate: 0 paying users. Valuation: somehow millions.";
+  if (i.includes("habit")) return "Longest streak: 0 days shipped.";
+  return "You successfully scaled the problem instead of the product.";
+}
+
 export function nameStage(featureCount: number): number {
   if (featureCount < 3) return 0;
   if (featureCount < 8) return 1;

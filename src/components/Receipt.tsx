@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { mutateName } from "../lib/projectNaming";
+import { ideaPunchline, mutateName } from "../lib/projectNaming";
 import { euro, formatConfidence, receiptText, shipLabel, unrealizedValue, type GameState } from "../lib/gameEngine";
 
 export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () => void }) {
@@ -55,6 +55,9 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
     });
     ctx.font = "bold 64px serif";
     ctx.font = "bold 36px serif";
+    ctx.font = "24px serif";
+    wrap(ctx, ideaPunchline(s.idea, s.features.length), 64, 1040, 950, 32);
+    ctx.font = "bold 36px serif";
     ctx.fillText("YOU WERE THE EXIT LIQUIDITY.", 64, 1120);
     ctx.font = "22px sans-serif";
     ctx.fillStyle = "#6b665c";
@@ -106,12 +109,13 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
           <div>Withdrawal status</div><div>FROZEN</div>
           <div>Ship date</div><div>NEVER</div>
         </div>
+        <p className="receipt-punchline">{ideaPunchline(s.idea, s.features.length)}</p>
         <p style={{ marginTop: 12 }}>Congratulations.</p>
         <h1>YOU WERE THE EXIT LIQUIDITY.</h1>
         <p className="whisper">rug pull complete ✓</p>
         <div className="row-btns" style={{ marginTop: 16 }}>
           <button className="primary" onClick={onRestart}>Try another innocent idea</button>
-          <button className="ghost" onClick={copy}>{copied ? "✓ Copied" : "Copy my exit statement"}</button>
+          <button className="ghost" onClick={copy}>{copied ? "✓ Failure copied" : "Copy my failure"}</button>
           <button className="ghost" onClick={download}>Download exit statement</button>
         </div>
       </div>

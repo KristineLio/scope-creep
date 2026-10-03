@@ -4,6 +4,7 @@ import {
   acceptConfidence,
   acceptWithdraw,
   addUserChoice,
+  resistWithdraw,
   applySilent,
   beginShip,
   declineConfidence,
@@ -20,6 +21,7 @@ import Receipt from "./components/Receipt";
 
 export default function App() {
   const [s, setS] = useState<GameState>(initialState);
+  const [scopeBurst, setScopeBurst] = useState(false);
 
   useEffect(() => {
     if (!s.toast) return;
@@ -81,6 +83,8 @@ export default function App() {
   }
 
   function agentPack(resisted = false) {
+    setScopeBurst(true);
+    setTimeout(() => setScopeBurst(false), 1600);
     setS((x) => {
       const extras = [...PACKS.agentic, ...PACKS.entpack, ...PACKS.scalepack.filter((id) => id !== "k8s")].filter((id) => !x.features.includes(id));
       return {
@@ -118,6 +122,7 @@ export default function App() {
   return (
     <Dashboard
       s={s}
+      scopeBurst={scopeBurst}
       st={st}
       extra={extra}
       late={late}
@@ -130,6 +135,7 @@ export default function App() {
       onAcceptConfidence={() => setS((x) => acceptConfidence(x))}
       onDeclineConfidence={() => setS((x) => declineConfidence(x))}
       onAcceptWithdraw={() => setS((x) => acceptWithdraw(x))}
+      onResistWithdraw={() => setS((x) => resistWithdraw(x))}
       onYesAgent={() => agentPack(false)}
       onNoAgent={() => agentPack(true)}
       onIrresponsible={() => setS((x) => ({ ...x, modal: null, ending: "sensible", screen: "end" }))}

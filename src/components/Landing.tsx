@@ -19,6 +19,7 @@ export default function Landing({ idea, onStart }: { idea: string; onStart: (v: 
         <p className="sub">
           Tell us what you're building. We'll recommend only what's <strong>absolutely essential</strong>.
         </p>
+        <p className="whisper hero-rule">Every time you try to ship, we'll find one more absolutely essential thing.</p>
         <div className="input-row">
           <input aria-label="Project idea" value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onStart(v.trim() || idea)} />
           <button className="cta" onClick={() => onStart(v.trim() || idea)}>
