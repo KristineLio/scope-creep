@@ -27,8 +27,16 @@ type Props = {
   onEvent: () => void;
 };
 
+const RESISTANCE_TOASTS = new Set([
+  "SHIP REQUEST DENIED",
+  "REQUEST DENIED",
+  "GREAT FEEDBACK",
+  "SHIP REQUEST CONVERTED",
+]);
+
 export default function Dashboard(p: Props) {
   const { s } = p;
+  const isResistanceToast = !!(s.toast && RESISTANCE_TOASTS.has(s.toast.title));
   return (
     <div className={`wrap ${p.scopeBurst ? "scope-burst" : ""}`}>
       <header className="top">
@@ -86,7 +94,10 @@ export default function Dashboard(p: Props) {
           </div>
         )}
         {s.toast && (
-          <div className={`toast ${["REQUEST DENIED", "GREAT FEEDBACK", "SHIP REQUEST CONVERTED", "SHIP REQUEST DENIED"].includes(s.toast.title) ? "system-toast" : ""}`} role="status">
+          <div className={`toast ${isResistanceToast ? "system-toast" : ""}`} role="status">
+            {isResistanceToast && (
+              <div className="resistance-kicker">RESISTANCE {s.resistanceAttempts}/4</div>
+            )}
             <strong>{s.toast.title}</strong>
             <div className="whisper">{s.toast.sub}</div>
           </div>

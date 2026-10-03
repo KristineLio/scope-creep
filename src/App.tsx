@@ -19,13 +19,21 @@ import Landing from "./components/Landing";
 import Dashboard from "./components/Dashboard";
 import Receipt from "./components/Receipt";
 
+const RESISTANCE_TOASTS = new Set([
+  "SHIP REQUEST DENIED",
+  "REQUEST DENIED",
+  "GREAT FEEDBACK",
+  "SHIP REQUEST CONVERTED",
+]);
+
 export default function App() {
   const [s, setS] = useState<GameState>(initialState);
   const [scopeBurst, setScopeBurst] = useState(false);
 
   useEffect(() => {
     if (!s.toast) return;
-    const t = setTimeout(() => setS((x) => ({ ...x, toast: null })), 2800);
+    const duration = RESISTANCE_TOASTS.has(s.toast.title) ? 3400 : 2800;
+    const t = setTimeout(() => setS((x) => ({ ...x, toast: null })), duration);
     return () => clearTimeout(t);
   }, [s.toast]);
 

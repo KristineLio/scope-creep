@@ -56,9 +56,41 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .primary { background: var(--accent); color: #fff; border: 0; padding: 11px 14px; border-radius: 9px; font-weight: 600; }
 .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 11px 14px; border-radius: 9px; }
 .ship { position: sticky; bottom: 16px; z-index: 5; width: 100%; background: #1a1d26; border: 1px solid var(--line); color: var(--text); padding: 14px; border-radius: 12px; font-weight: 600; margin-top: 16px; }
-.toast-stack { position: fixed; right: 16px; bottom: 72px; display: flex; flex-direction: column; gap: 8px; z-index: 40; }
+.toast-stack { position: fixed; right: 20px; top: 20px; bottom: auto; display: flex; flex-direction: column; gap: 8px; z-index: 40; }
 .toast { background: #1c2030; border: 1px solid var(--line); padding: 12px 14px; border-radius: 10px; max-width: 280px; position: static; }
-.system-toast { border-color: rgba(91, 140, 255, .75); box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.system-toast {
+  width: min(380px, calc(100vw - 32px));
+  max-width: none;
+  border-width: 2px;
+  border-color: rgba(91, 140, 255, .75);
+  padding: 15px 16px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.34);
+  animation: resistance-toast-in .22s ease both;
+}
+.system-toast > strong {
+  display: block;
+  font-size: 15px;
+  letter-spacing: .02em;
+}
+.resistance-kicker {
+  margin-bottom: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+@keyframes resistance-toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 700px) {
+  .toast-stack { top: 12px; right: 12px; left: 12px; }
+  .system-toast, .toast { width: 100%; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .system-toast { animation: none; }
+}
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.62); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 30; }
 .modal-card { max-width: 520px; width: 100%; }
 .arch { font-size: 12px; color: var(--muted); line-height: 1.7; word-break: break-word; }
