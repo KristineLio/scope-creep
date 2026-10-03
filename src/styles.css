@@ -32,7 +32,8 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .chip { background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 8px 12px; border-radius: 999px; font-size: 13px; }
 .whisper { margin-top: 18px; color: var(--muted); font-size: 13px; }
-.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 20px 0; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0; }
+@media (max-width: 700px) { .metrics { grid-template-columns: 1fr 1fr; } }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
 .card label { display: block; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
 .card .v { font-size: 22px; font-weight: 600; }

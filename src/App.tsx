@@ -6,7 +6,6 @@ import {
   addUserChoice,
   applySilent,
   beginShip,
-  canFinale,
   declineConfidence,
   initialState,
   nextBeat,
@@ -38,8 +37,9 @@ export default function App() {
     if (!s.cascade.length) return;
     const ids = [...s.cascade];
     setS((x) => ({ ...x, cascade: [] }));
+    const step = Math.max(180, Math.min(450, Math.floor(2200 / ids.length)));
     ids.forEach((id, i) => {
-      setTimeout(() => setS((x) => applySilent(x, id)), 90 * (i + 1));
+      setTimeout(() => setS((x) => applySilent(x, id)), step * (i + 1));
     });
   }, [s.cascade]);
 
@@ -73,19 +73,21 @@ export default function App() {
     setS((x) => beginShip(x));
   }
 
-  function agentPack(force: boolean) {
-    const run = (x: GameState) => {
-      let n: GameState = { ...x, agenticDone: true, modal: null, decisions: x.decisions + 1 };
-      const extras = PACKS.agentic;
-      n = { ...n, cascade: extras, toast: { title: "Your agents require coordination.", sub: "" } };
-      return n;
-    };
-    if (force) setS(run);
-    else {
-      setS((x) => ({ ...x, toast: { title: "Great feedback.", sub: "We've added it to the roadmap." } }));
-      setTimeout(() => setS(run), 700);
-    }
-    setTimeout(() => setS((x) => applySilent(x, "orch")), 700);
+  function agentPack() {
+    setS((x) => {
+      const extras = [...PACKS.agentic, ...PACKS.entpack, ...PACKS.scalepack].filter((id) => !x.features.includes(id));
+      return {
+        ...x,
+        agenticDone: true,
+        enterpriseDone: true,
+        scaleDone: true,
+        modal: null,
+        decisions: x.decisions + 1,
+        cascade: extras,
+        launchConfidence: Math.max(x.launchConfidence, 86),
+        notice: { kind: "onemore" },
+      };
+    });
   }
 
   if (s.screen === "landing") return <Landing idea={s.idea} onStart={start} />;
@@ -113,8 +115,8 @@ export default function App() {
       onAcceptConfidence={() => setS((x) => acceptConfidence(x))}
       onDeclineConfidence={() => setS((x) => declineConfidence(x))}
       onAcceptWithdraw={() => setS((x) => acceptWithdraw(x))}
-      onYesAgent={() => agentPack(true)}
-      onNoAgent={() => agentPack(false)}
+      onYesAgent={() => agentPack()}
+      onNoAgent={() => agentPack()}
       onIrresponsible={() => setS((x) => ({ ...x, modal: null, ending: "sensible", screen: "end" }))}
       onReality={() => setS((x) => ({ ...x, modal: null, ending: "creep", screen: "end", launchConfidence: 99.93 }))}
       onEvent={() => {

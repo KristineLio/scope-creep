@@ -38,13 +38,13 @@ export const FEATURES: Feature[] = [
   { id: "billing", title: "Subscription billing", copy: "Monetize the zero users.", deps: 5, debt: 10, days: 7, cost: 320 },
   { id: "referral", title: "Referral program", copy: "Growth before product.", deps: 2, debt: 4, days: 3, cost: 0 },
   { id: "teams", title: "Team workspaces", copy: "Collaboration for a one-person idea.", deps: 4, debt: 9, days: 6, cost: 0 },
-  { id: "admin", title: "Admin dashboard", copy: "Someone should be in charge of this.", deps: 3, debt: 7, days: 4, cost: 0, dashboard: true },
+  { id: "admin", title: "Dashboard", copy: "Someone should be in charge of this.", deps: 3, debt: 7, days: 4, cost: 0, dashboard: true },
   { id: "api", title: "Public API", copy: "Partners will come. Any day now.", deps: 4, debt: 8, days: 5, cost: 0 },
   { id: "mobile", title: "Mobile app", copy: "Native, obviously.", deps: 6, debt: 12, days: 14, cost: 0 },
   { id: "i18n", title: "Localization", copy: "Ship globally. Speak to nobody.", deps: 2, debt: 5, days: 6, cost: 0 },
   { id: "share", title: "Social sharing", copy: "Virality is a feature.", deps: 2, debt: 4, days: 2, cost: 0 },
   { id: "game", title: "Gamification", copy: "Points for not shipping.", deps: 3, debt: 6, days: 4, cost: 0 },
-  { id: "growth", title: "Growth analytics", copy: "Measure the absence of traction.", deps: 2, debt: 5, days: 3, cost: 0, dashboard: true },
+  { id: "growth", title: "Tracking", copy: "Measure the absence of traction.", deps: 2, debt: 5, days: 3, cost: 0, dashboard: true },
   { id: "entpack", title: "Enterprise Readiness", copy: "The enterprise buyer does not exist yet. Prepare anyway.", deps: 2, debt: 6, days: 4, cost: 0, pack: true },
   { id: "scalepack", title: "Prepare for Scale", copy: "Zero users. Time to go multi-region.", deps: 2, debt: 8, days: 5, cost: 0, pack: true },
   { id: "ragents", title: "Research Agent", copy: "Make it agentic.", deps: 2, debt: 8, days: 3, cost: 0, agent: true },
@@ -64,7 +64,7 @@ export const FEATURES: Feature[] = [
   { id: "k8s", title: "Kubernetes", copy: "Orchestrate the emptiness.", deps: 8, debt: 18, days: 14, cost: 9400 },
   { id: "idp", title: "Internal developer platform", copy: "A platform for the platform.", deps: 6, debt: 15, days: 16, cost: 18420 },
   { id: "crm", title: "Sales CRM integration", copy: "Pipeline: empty.", deps: 3, debt: 6, days: 5, cost: 320 },
-  { id: "edash", title: "Enterprise dashboard", copy: "Another dashboard. Users love dashboards.", deps: 3, debt: 8, days: 4, cost: 0, dashboard: true },
+  { id: "edash", title: "Attribution", copy: "Another dashboard. Users love dashboards.", deps: 3, debt: 8, days: 4, cost: 0, dashboard: true },
   { id: "ai", title: "AI", copy: "Needs more AI.", deps: 4, debt: 12, days: 6, cost: 320 },
   { id: "chain", title: "Blockchain", copy: "The problem isn't clear enough.", deps: 9, debt: 22, days: 30, cost: 2700 },
   { id: "vibe", title: "Rebuild in VibeFlow", copy: "Have you considered rebuilding it in VibeFlow?", deps: 1, debt: 3, days: 1, cost: 0 },
@@ -72,9 +72,10 @@ export const FEATURES: Feature[] = [
 
 export const PACKS: Record<string, string[]> = {
   accounts: ["auth", "db", "email", "reset"],
+  analytics: ["admin", "growth", "wh", "edash"],
   entpack: ["sso", "audit", "rbac", "soc2"],
   scalepack: ["multi", "wh", "k8s", "idp"],
-  agentic: ["ragents", "pagent", "pers", "aagent", "sagent"],
+  agentic: ["ragents", "pagent", "aagent", "sagent", "orch"],
 };
 
 export const HIDDEN = new Set([

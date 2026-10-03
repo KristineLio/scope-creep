@@ -1,4 +1,4 @@
-import { FEATURES, HIDDEN, PACKS, personalizedIds, type Feature } from "../data/features";
+import { FEATURES, HIDDEN, PACKS, type Feature } from "../data/features";
 import { EVENTS, type GameEvent } from "../data/events";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { mutateName, nameStage } from "./projectNaming";
@@ -9,14 +9,14 @@ export type Notice =
   | { kind: "event"; ev: GameEvent }
   | { kind: "onemore" }
   | { kind: "reality" }
-  | { kind: "launchCheckpoint"; stage: "mvp" | "agentic" | "enterprise" };
+  | { kind: "launchCheckpoint"; stage: "mvp" };
 
 export type Modal =
   | { kind: "agentic" }
   | { kind: "dark" }
   | { kind: "checklist" }
   | { kind: "confidence"; featureId: string; before: number; after: number; step: number }
-  | { kind: "withdraw"; variant: 0 | 1 | 2 | 3; featureId: string }
+  | { kind: "withdraw"; phase: "k8s" | "finale" }
   | null;
 
 export const CONFIDENCE_STEPS = [72, 86, 93, 97, 99.1, 99.7, 99.93];
@@ -104,11 +104,11 @@ export function statusFor(s: GameState): { t: string; c: string } {
 }
 
 export function canFinale(s: GameState): boolean {
-  return s.decisions >= 8 && s.features.length >= 20 && s.enterpriseDone && s.scaleDone && s.agenticDone && s.cost >= 9000;
+  return s.agenticDone && s.enterpriseDone && s.scaleDone;
 }
 
 export function scamArcComplete(s: GameState): boolean {
-  return s.agenticDone && s.enterpriseDone && s.scaleDone && s.shipInterventions >= 3 && s.launchConfidence >= 99.93 && s.sawFinalWithdraw;
+  return s.agenticDone && s.enterpriseDone && s.scaleDone && s.sawFinalWithdraw && s.launchConfidence >= 99.93;
 }
 
 export function unrealizedValue(n: number): number {
@@ -136,10 +136,13 @@ export function fomoLabel(s: GameState): string {
   return "LOW";
 }
 
+const PRIMARY_TOASTS = new Set(["worse", "downline", "numup"]);
+
 function unlock(s: GameState, id: keyof typeof ACHIEVEMENTS): GameState {
   if (s.achievements.includes(id)) return s;
   const a = ACHIEVEMENTS[id];
-  return { ...s, achievements: [...s.achievements, id], toast: { title: `🏆 ${a.title}`, sub: a.sub } };
+  const toast = PRIMARY_TOASTS.has(id) ? { title: a.title, sub: a.sub } : s.toast;
+  return { ...s, achievements: [...s.achievements, id], toast };
 }
 
 export function applyFeature(s: GameState, id: string, countDecision: boolean): GameState {
@@ -175,41 +178,24 @@ export function applyFeature(s: GameState, id: string, countDecision: boolean): 
 }
 
 export function nextBeat(s: GameState): GameState {
-  if (scamArcComplete(s)) return { ...s, notice: { kind: "reality" }, launchConfidence: 99.93 };
   if (s.features.length <= 1) return { ...s, notice: { kind: "first" } };
-  const personal = personalizedIds(s.idea).find((id) => !s.features.includes(id));
-  if (personal) {
-    const f = FEATURES.find((x) => x.id === personal)!;
-    return { ...s, notice: { kind: "rec", f } };
-  }
-  if (!s.sawMvpCheck && s.decisions >= 3) {
+  if (!s.sawMvpCheck && s.features.filter((id) => id !== "core").length >= 1 && !s.agenticDone) {
     return { ...s, sawMvpCheck: true, notice: { kind: "launchCheckpoint", stage: "mvp" } };
   }
-  if (s.decisions >= 5 && !s.agenticDone) return { ...s, modal: { kind: "agentic" }, notice: s.notice };
-  if (s.agenticDone && s.features.includes("orch") && !s.features.includes("mon")) {
-    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "mon")! } };
+  if (s.features.includes("analytics") && !s.agenticDone) {
+    return { ...s, modal: { kind: "agentic" }, notice: null };
   }
-  if (s.features.includes("mon") && !s.features.includes("mon2")) {
-    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "mon2")! } };
-  }
-  if (s.agenticDone && s.features.includes("mon2") && !s.sawAgenticCheck) {
-    return { ...s, sawAgenticCheck: true, notice: { kind: "launchCheckpoint", stage: "agentic" } };
-  }
-  if (s.agenticDone && !s.enterpriseDone) {
-    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "entpack")! } };
-  }
-  if (s.enterpriseDone && !s.scaleDone) {
-    return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "scalepack")! } };
-  }
-  if (s.enterpriseDone && s.scaleDone && !s.sawEnterpriseCheck) {
-    return { ...s, sawEnterpriseCheck: true, notice: { kind: "launchCheckpoint", stage: "enterprise" } };
-  }
-  if (canFinale(s) && !scamArcComplete(s)) {
-    return { ...s, notice: { kind: "launchCheckpoint", stage: "enterprise" } };
+  if (s.agenticDone) {
+    return {
+      ...s,
+      notice: {
+        kind: "onemore",
+      },
+    };
   }
   const next = FEATURES.find((f) => !s.features.includes(f.id) && !HIDDEN.has(f.id) && !f.pack);
   if (next) return { ...s, notice: { kind: "rec", f: next } };
-  return { ...s, notice: { kind: "launchCheckpoint", stage: s.scaleDone ? "enterprise" : "mvp" } };
+  return { ...s, notice: { kind: "launchCheckpoint", stage: "mvp" } };
 }
 
 export function addUserChoice(s: GameState, id: string): GameState {
@@ -235,32 +221,23 @@ export function pickConfidenceFeature(s: GameState): string {
 }
 
 export function beginShip(s: GameState): GameState {
-  if (s.features.length <= 3 && s.decisions <= 2) return { ...s, ending: "sensible", screen: "end" };
-  const step = Math.min(s.shipInterventions, CONFIDENCE_STEPS.length - 2);
-  const before = CONFIDENCE_STEPS[step];
-  const after = CONFIDENCE_STEPS[Math.min(step + 1, CONFIDENCE_STEPS.length - 1)];
-  const featureId = pickConfidenceFeature(s);
-  const variant = Math.min(3, Math.max(0, s.shipInterventions - 1)) as 0 | 1 | 2 | 3;
-  if (scamArcComplete({ ...s, launchConfidence: 99.93, sawFinalWithdraw: true }) && s.sawFinalWithdraw) {
-    return { ...s, modal: { kind: "checklist" }, launchConfidence: 99.93, confidenceUnlocked: true };
+  if (s.features.length <= 3 && s.decisions <= 2 && !s.features.includes("analytics") && !s.agenticDone) {
+    return { ...s, ending: "sensible", screen: "end" };
   }
-  if (s.shipInterventions >= 1 || s.agenticDone || s.sawAgenticCheck) {
-    const wfeat = ["sso", "k8s", "edash", featureId][variant];
-    const isFinal = variant >= 3 || (s.enterpriseDone && s.scaleDone && s.shipInterventions >= 2);
+  if (s.agenticDone) {
     return {
       ...s,
       confidenceUnlocked: true,
-      launchConfidence: isFinal ? 99.93 : before,
-      sawFinalWithdraw: isFinal ? true : s.sawFinalWithdraw,
-      modal: { kind: "withdraw", variant: isFinal ? 3 : variant, featureId: s.features.includes(wfeat) ? featureId : wfeat },
+      launchConfidence: Math.max(s.launchConfidence, 86),
+      modal: { kind: "withdraw", phase: "k8s" },
     };
   }
   return {
     ...s,
     confidenceUnlocked: true,
-    vibesHint: s.confidenceUnlocked ? s.vibesHint : true,
-    launchConfidence: before,
-    modal: { kind: "confidence", featureId, before, after, step },
+    vibesHint: true,
+    launchConfidence: 72,
+    modal: { kind: "confidence", featureId: "analytics", before: 72, after: 86, step: 0 },
   };
 }
 
@@ -279,42 +256,47 @@ export function acceptConfidence(s: GameState): GameState {
 }
 
 export function declineConfidence(s: GameState): GameState {
-  if (!s.modal || (s.modal.kind !== "confidence" && s.modal.kind !== "withdraw")) return s;
-  const next = s.shipInterventions + 1;
-  const isFinalWithdraw = s.modal.kind === "withdraw" && s.modal.variant === 3;
-  if (isFinalWithdraw || (next >= 3 && s.agenticDone && s.enterpriseDone && s.scaleDone)) {
-    return { ...s, shipInterventions: next, modal: { kind: "checklist" }, launchConfidence: 99.93, sawFinalWithdraw: true, confidenceUnlocked: true, vibesHint: false };
+  if (!s.modal) return s;
+  if (s.modal.kind === "confidence") {
+    return { ...s, shipInterventions: s.shipInterventions + 1, modal: null, vibesHint: false };
   }
-  return { ...s, shipInterventions: next, modal: null, vibesHint: false };
+  if (s.modal.kind === "withdraw" && s.modal.phase === "finale") {
+    return { ...s, ending: "creep", screen: "end", launchConfidence: 99.93, sawFinalWithdraw: true, modal: null };
+  }
+  if (s.modal.kind === "withdraw") {
+    return { ...s, ending: "creep", screen: "end", launchConfidence: 99.93, sawFinalWithdraw: true, modal: null };
+  }
+  return { ...s, modal: null };
 }
 
 export function acceptWithdraw(s: GameState): GameState {
   if (!s.modal || s.modal.kind !== "withdraw") return s;
-  const { featureId } = s.modal;
-  return addUserChoice({
+  if (s.modal.phase === "finale") {
+    return { ...s, ending: "creep", screen: "end", launchConfidence: 99.93, sawFinalWithdraw: true, modal: null };
+  }
+  let n: GameState = {
     ...s,
     shipInterventions: s.shipInterventions + 1,
-    modal: null,
-    launchConfidence: Math.min(CONFIDENCE_STEPS[Math.min(s.shipInterventions + 1, CONFIDENCE_STEPS.length - 1)], 99.93),
-  }, featureId);
+    launchConfidence: 99.93,
+    days: Math.max(s.days, 50),
+    sawFinalWithdraw: true,
+    modal: { kind: "withdraw", phase: "finale" },
+  };
+  const extras = PACKS.scalepack.filter((id) => !n.features.includes(id));
+  n = { ...n, cascade: extras };
+  return n;
 }
 
 export function receiptText(s: GameState): string {
   return `SCOPE CREEP™ EXIT STATEMENT
 
-I started with:
-${s.idea}
-
-I ended up with:
-${mutateName(s.idea, 4)}
-
+Initial investment: One innocent idea
 Portfolio value: ${euro(unrealizedValue(s.features.length))}
 Liquid value: €0
 Features accumulated: ${s.features.length}
 Downline dependencies: ${s.deps}
-AI exposure: ${s.agents} agents
 Paying users: 0
-Launch confidence: 99.93%
+Launch Confidence: 99.93%
 Withdrawal status: FROZEN
 Ship date: NEVER
 

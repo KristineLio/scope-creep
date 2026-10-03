@@ -101,13 +101,11 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
           <div>Liquid value</div><div>€0</div>
           <div>Features accumulated</div><div>{s.features.length}</div>
           <div>Downline dependencies</div><div>{s.deps}</div>
-          <div>AI exposure</div><div>{s.agents} agents</div>
-          <div>Users interviewed</div><div>0</div>
           <div>Paying users</div><div>0</div>
           <div>Launch Confidence</div><div>99.93%</div>
           <div>Withdrawal status</div><div>FROZEN</div>
+          <div>Ship date</div><div>NEVER</div>
         </div>
-        <div className="never">NEVER</div>
         <p style={{ marginTop: 12 }}>Congratulations.</p>
         <h1>YOU WERE THE EXIT LIQUIDITY.</h1>
         <p className="whisper">rug pull complete ✓</p>
