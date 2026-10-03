@@ -104,7 +104,7 @@ export default function Receipt({ s, onRestart }: { s: GameState; onRestart: () 
           <div>AI exposure</div><div>{s.agents} agents</div>
           <div>Users interviewed</div><div>0</div>
           <div>Paying users</div><div>0</div>
-          <div>Launch Confidence</div><div>{formatConfidence(s.launchConfidence)}</div>
+          <div>Launch Confidence</div><div>99.93%</div>
           <div>Withdrawal status</div><div>FROZEN</div>
         </div>
         <div className="never">NEVER</div>

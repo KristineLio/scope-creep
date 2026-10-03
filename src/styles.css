@@ -50,7 +50,8 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .primary { background: var(--accent); color: #fff; border: 0; padding: 11px 14px; border-radius: 9px; font-weight: 600; }
 .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 11px 14px; border-radius: 9px; }
 .ship { position: sticky; bottom: 16px; z-index: 5; width: 100%; background: #1a1d26; border: 1px solid var(--line); color: var(--text); padding: 14px; border-radius: 12px; font-weight: 600; margin-top: 16px; }
-.toast { position: fixed; right: 16px; bottom: 16px; background: #1c2030; border: 1px solid var(--line); padding: 12px 14px; border-radius: 10px; max-width: 280px; z-index: 20; }
+.toast-stack { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 20; }
+.toast { background: #1c2030; border: 1px solid var(--line); padding: 12px 14px; border-radius: 10px; max-width: 280px; position: static; }
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.62); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 30; }
 .modal-card { max-width: 520px; width: 100%; }
 .arch { font-size: 12px; color: var(--muted); line-height: 1.7; word-break: break-word; }

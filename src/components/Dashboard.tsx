@@ -113,18 +113,20 @@ export default function Dashboard(p: Props) {
           <p className="whisper">12,481 founders are currently not shipping. *Sample size unavailable.</p>
         </div>
       )}
-      {s.recruitToast && (
-        <div className="toast" role="status">
-          <strong>Congratulations!</strong>
-          <div className="whisper">{s.recruitToast}</div>
-        </div>
-      )}
-      {s.toast && (
-        <div className="toast" role="status">
-          <strong>{s.toast.title}</strong>
-          <div className="whisper">{s.toast.sub}</div>
-        </div>
-      )}
+      <div className="toast-stack">
+        {s.recruitToast && (
+          <div className="toast" role="status">
+            <strong>Congratulations!</strong>
+            <div className="whisper">{s.recruitToast}</div>
+          </div>
+        )}
+        {s.toast && (
+          <div className="toast" role="status">
+            <strong>{s.toast.title}</strong>
+            <div className="whisper">{s.toast.sub}</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -159,6 +161,21 @@ function Notice(p: Props) {
       <div className="row-btns"><button className="primary" onClick={p.onEvent}>{n.ev.cta}</button></div>
     </div>
   );
+  if (n.kind === "launchCheckpoint") {
+    const copy = n.stage === "mvp"
+      ? { h: "Your MVP is ready.", q: "Against all odds, this still resembles a product.", n: "Recommended before anyone adds AI." }
+      : n.stage === "agentic"
+        ? { h: "Launch readiness restored.", q: "Five agents later, we are finally back where we started.", n: "Confidence has improved dramatically for reasons we cannot disclose." }
+        : { h: "You're finally ready to ship.", q: `Portfolio value ${euro(unrealizedValue(p.s.features.length))}. Realized revenue: €0.`, n: "This time we mean it." };
+    return (
+      <div className="notice">
+        <h3>{copy.h}</h3>
+        <p className="quote">{copy.q}</p>
+        <div className="row-btns"><button className="primary" onClick={p.onShip}>Ship Now</button></div>
+        <p className="whisper">{copy.n}</p>
+      </div>
+    );
+  }
   if (n.kind === "onemore") return (
     <div className="notice">
       <h3>Still technically possible.</h3>
@@ -205,11 +222,12 @@ function Modal(p: Props) {
   return (
     <div className="overlay">
       <div className="modal-card">
+        <p className="whisper">Launch Confidence: 99.93% · Withdrawal status: Pending final review</p>
         <h2>PRE-LAUNCH CHECKLIST</h2>
         <p className="quote">✅ Logo<br />✅ Analytics<br />✅ AI<br />✅ Enterprise auth<br />✅ Mobile roadmap<br />✅ Agent orchestration<br />✅ SOC 2 planning<br />❌ Talk to one user</p>
         <div className="row-btns">
           <button className="ghost" disabled>Talk to one user</button>
-          <button className="primary" onClick={p.onReality}>Accept reality</button>
+          <button className="primary" onClick={p.onReality}>Accept financial reality</button>
         </div>
       </div>
     </div>

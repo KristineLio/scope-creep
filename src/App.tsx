@@ -29,6 +29,12 @@ export default function App() {
   }, [s.toast]);
 
   useEffect(() => {
+    if (!s.recruitToast) return;
+    const t = setTimeout(() => setS((x) => ({ ...x, recruitToast: null })), 2300);
+    return () => clearTimeout(t);
+  }, [s.recruitToast]);
+
+  useEffect(() => {
     if (!s.cascade.length) return;
     const ids = [...s.cascade];
     setS((x) => ({ ...x, cascade: [] }));
@@ -110,7 +116,7 @@ export default function App() {
       onYesAgent={() => agentPack(true)}
       onNoAgent={() => agentPack(false)}
       onIrresponsible={() => setS((x) => ({ ...x, modal: null, ending: "sensible", screen: "end" }))}
-      onReality={() => setS((x) => ({ ...x, modal: null, ending: "creep", screen: "end" }))}
+      onReality={() => setS((x) => ({ ...x, modal: null, ending: "creep", screen: "end", launchConfidence: 99.93 }))}
       onEvent={() => {
         const ev = s.notice && s.notice.kind === "event" ? s.notice.ev : null;
         if (ev?.add) onAdd(ev.add);

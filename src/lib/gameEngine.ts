@@ -8,7 +8,8 @@ export type Notice =
   | { kind: "rec"; f: Feature }
   | { kind: "event"; ev: GameEvent }
   | { kind: "onemore" }
-  | { kind: "reality" };
+  | { kind: "reality" }
+  | { kind: "launchCheckpoint"; stage: "mvp" | "agentic" | "enterprise" };
 
 export type Modal =
   | { kind: "agentic" }
@@ -48,6 +49,10 @@ export type GameState = {
   confidenceUnlocked: boolean;
   vibesHint: boolean;
   recruitToast: string | null;
+  sawMvpCheck: boolean;
+  sawAgenticCheck: boolean;
+  sawEnterpriseCheck: boolean;
+  sawFinalWithdraw: boolean;
 };
 
 export const initialState = (): GameState => ({
@@ -76,6 +81,10 @@ export const initialState = (): GameState => ({
   confidenceUnlocked: false,
   vibesHint: false,
   recruitToast: null,
+  sawMvpCheck: false,
+  sawAgenticCheck: false,
+  sawEnterpriseCheck: false,
+  sawFinalWithdraw: false,
 });
 
 export function shipLabel(days: number): string {
@@ -95,7 +104,11 @@ export function statusFor(s: GameState): { t: string; c: string } {
 }
 
 export function canFinale(s: GameState): boolean {
-  return s.decisions >= 10 && s.features.length >= 28 && s.enterpriseDone && s.scaleDone && s.agenticDone && s.cost >= 9000;
+  return s.decisions >= 8 && s.features.length >= 20 && s.enterpriseDone && s.scaleDone && s.agenticDone && s.cost >= 9000;
+}
+
+export function scamArcComplete(s: GameState): boolean {
+  return s.agenticDone && s.enterpriseDone && s.scaleDone && s.shipInterventions >= 3 && s.launchConfidence >= 99.93 && s.sawFinalWithdraw;
 }
 
 export function unrealizedValue(n: number): number {
@@ -162,8 +175,16 @@ export function applyFeature(s: GameState, id: string, countDecision: boolean): 
 }
 
 export function nextBeat(s: GameState): GameState {
-  if (canFinale(s)) return { ...s, notice: { kind: "reality" } };
+  if (scamArcComplete(s)) return { ...s, notice: { kind: "reality" }, launchConfidence: 99.93 };
   if (s.features.length <= 1) return { ...s, notice: { kind: "first" } };
+  const personal = personalizedIds(s.idea).find((id) => !s.features.includes(id));
+  if (personal) {
+    const f = FEATURES.find((x) => x.id === personal)!;
+    return { ...s, notice: { kind: "rec", f } };
+  }
+  if (!s.sawMvpCheck && s.decisions >= 3) {
+    return { ...s, sawMvpCheck: true, notice: { kind: "launchCheckpoint", stage: "mvp" } };
+  }
   if (s.decisions >= 5 && !s.agenticDone) return { ...s, modal: { kind: "agentic" }, notice: s.notice };
   if (s.agenticDone && s.features.includes("orch") && !s.features.includes("mon")) {
     return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "mon")! } };
@@ -171,26 +192,24 @@ export function nextBeat(s: GameState): GameState {
   if (s.features.includes("mon") && !s.features.includes("mon2")) {
     return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "mon2")! } };
   }
+  if (s.agenticDone && s.features.includes("mon2") && !s.sawAgenticCheck) {
+    return { ...s, sawAgenticCheck: true, notice: { kind: "launchCheckpoint", stage: "agentic" } };
+  }
   if (s.agenticDone && !s.enterpriseDone) {
     return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "entpack")! } };
   }
   if (s.enterpriseDone && !s.scaleDone) {
     return { ...s, notice: { kind: "rec", f: FEATURES.find((f) => f.id === "scalepack")! } };
   }
-  const personal = personalizedIds(s.idea).find((id) => !s.features.includes(id));
-  if (personal) {
-    const f = FEATURES.find((x) => x.id === personal)!;
-    return { ...s, notice: { kind: "rec", f } };
+  if (s.enterpriseDone && s.scaleDone && !s.sawEnterpriseCheck) {
+    return { ...s, sawEnterpriseCheck: true, notice: { kind: "launchCheckpoint", stage: "enterprise" } };
   }
-  if (Math.random() < 0.22) {
-    const pool = EVENTS.filter((e) => !e.rare || Math.random() < 0.15);
-    const ev = pool[Math.floor(Math.random() * pool.length)];
-    return { ...s, notice: { kind: "event", ev } };
+  if (canFinale(s) && !scamArcComplete(s)) {
+    return { ...s, notice: { kind: "launchCheckpoint", stage: "enterprise" } };
   }
   const next = FEATURES.find((f) => !s.features.includes(f.id) && !HIDDEN.has(f.id) && !f.pack);
   if (next) return { ...s, notice: { kind: "rec", f: next } };
-  if (canFinale(s)) return { ...s, notice: { kind: "reality" } };
-  return { ...s, notice: { kind: "onemore" } };
+  return { ...s, notice: { kind: "launchCheckpoint", stage: s.scaleDone ? "enterprise" : "mvp" } };
 }
 
 export function addUserChoice(s: GameState, id: string): GameState {
@@ -221,17 +240,19 @@ export function beginShip(s: GameState): GameState {
   const before = CONFIDENCE_STEPS[step];
   const after = CONFIDENCE_STEPS[Math.min(step + 1, CONFIDENCE_STEPS.length - 1)];
   const featureId = pickConfidenceFeature(s);
-  const escalated = s.agenticDone && s.enterpriseDone && s.scaleDone;
-  if (s.shipInterventions >= 3 && escalated) return { ...s, modal: { kind: "checklist" }, confidenceUnlocked: true };
-  if (s.launchConfidence >= 99.93 && s.shipInterventions >= 3) return { ...s, modal: { kind: "checklist" }, confidenceUnlocked: true };
-  if (s.shipInterventions >= 1 && s.features.length >= 12) {
-    const variant = Math.min(3, s.shipInterventions) as 0 | 1 | 2 | 3;
+  const variant = Math.min(3, Math.max(0, s.shipInterventions - 1)) as 0 | 1 | 2 | 3;
+  if (scamArcComplete({ ...s, launchConfidence: 99.93, sawFinalWithdraw: true }) && s.sawFinalWithdraw) {
+    return { ...s, modal: { kind: "checklist" }, launchConfidence: 99.93, confidenceUnlocked: true };
+  }
+  if (s.shipInterventions >= 1 || s.agenticDone || s.sawAgenticCheck) {
     const wfeat = ["sso", "k8s", "edash", featureId][variant];
+    const isFinal = variant >= 3 || (s.enterpriseDone && s.scaleDone && s.shipInterventions >= 2);
     return {
       ...s,
       confidenceUnlocked: true,
-      launchConfidence: before,
-      modal: { kind: "withdraw", variant, featureId: s.features.includes(wfeat) ? featureId : wfeat },
+      launchConfidence: isFinal ? 99.93 : before,
+      sawFinalWithdraw: isFinal ? true : s.sawFinalWithdraw,
+      modal: { kind: "withdraw", variant: isFinal ? 3 : variant, featureId: s.features.includes(wfeat) ? featureId : wfeat },
     };
   }
   return {
@@ -260,9 +281,9 @@ export function acceptConfidence(s: GameState): GameState {
 export function declineConfidence(s: GameState): GameState {
   if (!s.modal || (s.modal.kind !== "confidence" && s.modal.kind !== "withdraw")) return s;
   const next = s.shipInterventions + 1;
-  const escalated = s.agenticDone && s.enterpriseDone && s.scaleDone;
-  if (next >= 3 && (escalated || s.features.length > 18)) {
-    return { ...s, shipInterventions: next, modal: { kind: "checklist" }, confidenceUnlocked: true, vibesHint: false };
+  const isFinalWithdraw = s.modal.kind === "withdraw" && s.modal.variant === 3;
+  if (isFinalWithdraw || (next >= 3 && s.agenticDone && s.enterpriseDone && s.scaleDone)) {
+    return { ...s, shipInterventions: next, modal: { kind: "checklist" }, launchConfidence: 99.93, sawFinalWithdraw: true, confidenceUnlocked: true, vibesHint: false };
   }
   return { ...s, shipInterventions: next, modal: null, vibesHint: false };
 }
@@ -293,7 +314,7 @@ Features accumulated: ${s.features.length}
 Downline dependencies: ${s.deps}
 AI exposure: ${s.agents} agents
 Paying users: 0
-Launch confidence: ${formatConfidence(s.launchConfidence)}
+Launch confidence: 99.93%
 Withdrawal status: FROZEN
 Ship date: NEVER
 
