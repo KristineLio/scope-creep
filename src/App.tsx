@@ -75,7 +75,7 @@ export default function App() {
 
   function agentPack() {
     setS((x) => {
-      const extras = [...PACKS.agentic, ...PACKS.entpack, ...PACKS.scalepack].filter((id) => !x.features.includes(id));
+      const extras = [...PACKS.agentic, ...PACKS.entpack, ...PACKS.scalepack.filter((id) => id !== "k8s")].filter((id) => !x.features.includes(id));
       return {
         ...x,
         agenticDone: true,

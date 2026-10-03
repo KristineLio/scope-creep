@@ -70,17 +70,19 @@ header.top { display: flex; justify-content: space-between; align-items: center;
 .py-row { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .py-node { border: 1px solid var(--line); background: #1a1d26; color: var(--muted); font-size: 10px; padding: 4px 8px; border-radius: 6px; }
 .feat-list li.pop { color: var(--text); }
-.plan-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.success-plan { padding: 12px 14px; }
+.plan-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .plan-pct { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--text); }
-.plan-line { margin-top: 8px; }
-.plan-bar { margin: 10px 0 12px; }
+.plan-line { margin-top: 5px; line-height: 1.25; }
+.plan-bar { margin: 7px 0 8px; }
 .plan-list { list-style: none; }
-.plan-list li { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.plan-list li { display: flex; gap: 7px; padding: 3px 0; align-items: flex-start; border-bottom: 1px solid var(--line); }
 .plan-list li:last-child { border-bottom: 0; }
-.plan-list .mark { width: 16px; flex: none; color: var(--muted); }
+.plan-list .mark { width: 14px; flex: none; line-height: 1.25; color: var(--muted); }
+.plan-list strong { display: block; font-size: 12px; line-height: 1.2; }
 .plan-list li.done { color: var(--text); }
 .plan-list li.done .mark { color: var(--good); }
 .plan-list li.open strong { color: var(--muted); font-weight: 500; }
-.plan-list li.critical strong { color: var(--muted); }
-.plan-list .whisper { margin-top: 2px; font-size: 12px; }
+.plan-list li.critical strong { color: var(--text); }
+.plan-list .whisper { margin-top: 1px; font-size: 10.5px; line-height: 1.2; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
